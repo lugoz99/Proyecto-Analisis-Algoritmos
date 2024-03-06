@@ -13,15 +13,23 @@ from layouts.form_page import form_page
 from utils.visualization import update_network,update_network_personalizado
 from helpers.form import get_form_data
 from layouts.general_layouts import upload_component
+from callbacks.callbacks import register_callbacks
+
+cyto.load_extra_layouts()
+
 # Crear la aplicación de Dash
 app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, "style.css"])
 
+register_callbacks(app)
 # Crear el diseño de la aplicación
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     dcc.Store(id='form-data-store'),
+    dcc.Store(id='network-elements'),
+    dcc.Store(id='network-stylesheet'),
+    dcc.Store(id='random-clicks', data=0),
     navbar,
-    html.Div(id='page-content')
+    html.Div(id='page-content'),
 ])
 # Callbacks para manejar la navegación y el almacenamiento de datos del formulario
 @app.callback(
@@ -45,14 +53,17 @@ def store_form_data(n_clicks, n_nodes, is_complete, is_connected, is_weighted, i
 
 # Callback para mostrar la página correspondiente
 @app.callback(
-    Output('page-content', 'children'),
+    Output('page-content', 'children', allow_duplicate=True),
     [Input('form-data-store', 'data')],
-    [Input('url', 'pathname')]
+    [Input('url', 'pathname')],
+    [Input('random-clicks', 'data')],
+    prevent_initial_call=True
 )
-def display_page(form_data, pathname):
+def display_page(form_data,pathname,n_clicks):
     if pathname == '/formulario':
         return form_page
     if pathname == '/aleatorio':
+            print("genero ")
             elements, stylesheet = update_network()
             return get_graph_div(elements, stylesheet)
     if pathname == '/personalizado':
@@ -61,7 +72,8 @@ def display_page(form_data, pathname):
             return get_graph_div(elements, stylesheet)
     if pathname == '/cargar-json':
         # TODO: Agregar la página para cargar un archivo JSON
-        return  upload_component
+            return upload_component
+
     else:
         return "Esta es la página de inicio"  # Puedes reemplazar esto con tu propia página de inicio
 
@@ -74,7 +86,7 @@ def get_graph_div(elements, stylesheet=None):
             children=[
                 cyto.Cytoscape(
                     id='network-graph',
-                    layout={'name': 'random'},
+                    layout={'name': 'spread'},
                     style={'width': '100%', 'height': '800px'},
                     stylesheet=stylesheet,
                     elements=elements
@@ -88,6 +100,25 @@ def grafo_personalizado(form_data):
     if n_nodes is not None:
         return update_network_personalizado(n_nodes, is_weighted, is_directed, is_connected, is_complete)
     return None, None
+
+
+@app.callback(
+    Output('page-content', 'children', allow_duplicate=True),
+    [Input('network-elements', 'data'), Input('network-stylesheet', 'data')],
+    prevent_initial_call=True
+)
+def update_graph(elements, stylesheet):
+    return get_graph_div(elements, stylesheet)
+
+
+@app.callback(
+    Output('random-clicks', 'data'),
+    [Input('generate-random', 'n_clicks')]
+)
+def update_random_clicks(n_clicks):
+    return n_clicks
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)

@@ -3,7 +3,7 @@ from dash import html,dcc
 
 upload_component = html.Div([
     dcc.Upload(
-        id='upload-data',
+        id='upload-json',
         children=html.Div([
             'Drag and Drop or ',
             html.A('Select Files')

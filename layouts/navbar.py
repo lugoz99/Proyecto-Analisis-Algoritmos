@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-
+from dash import html
 
 navbar = dbc.NavbarSimple(
         className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm",
@@ -78,8 +78,30 @@ navbar = dbc.NavbarSimple(
                     dbc.DropdownMenuItem("Formato txt", href="#"),
                     dbc.DropdownMenuItem(divider=True),
                     dbc.DropdownMenuItem("Exportar datos", header=True),
-                    dbc.DropdownMenuItem("Excel", href="#"),
-                    dbc.DropdownMenuItem("Imagen", href="#"),
+                    dbc.DropdownMenuItem( html.Div(
+        dbc.Button("Excel", color="primary", className="mx-auto d-flex w-100"),
+        className="d-flex"
+    ),
+    href="#"),
+                    dbc.DropdownMenu(
+                        label="Imagen",
+                        size="md",
+                        className="mb-3 mx-3",
+                        children=[
+                            dbc.DropdownMenuItem(
+                                html.Div(
+                                    dbc.Button("PNG", color="primary", className="mx-auto d-flex w-100"),
+                                    className="d-flex"
+                                ),
+                        ),
+                            dbc.DropdownMenuItem(
+                                html.Div(
+                                    dbc.Button("JPG", color="secondary", className="mx-auto d-flex w-100"),
+                                    className="d-flex"
+                                ),
+                            ),
+                        ],
+                    )
                 ],
                 nav=True,
                 in_navbar=True,
