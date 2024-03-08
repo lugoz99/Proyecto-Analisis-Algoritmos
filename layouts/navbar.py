@@ -30,7 +30,8 @@ navbar = dbc.NavbarSimple(
             dbc.DropdownMenu(
                 children=[
                     dbc.DropdownMenuItem("Ver en Modo", header=True),
-                    dbc.DropdownMenuItem("Grafica", id='open-file-m'),
+                    #dbc.DropdownMenuItem("Grafica", id='id-grafica',href="/grafica"),
+                    dbc.Button("Grafica", id='id-grafica', href="/grafica", className="m-2"),
                     dbc.DropdownMenuItem("Tabla", id='close-file-m-1'),
                 ],
                 nav=True,

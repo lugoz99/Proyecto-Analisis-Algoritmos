@@ -3,7 +3,11 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-form_page = html.Div([
+form_page = html.Div(className="card container mt-2",children=[
+
+
+    html.H2("Personaliza tu grafo"),
+
     dbc.CardGroup(
         [
             dbc.Label("Número de nodos"),

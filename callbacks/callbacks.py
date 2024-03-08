@@ -1,7 +1,6 @@
 import base64
-from dash import Input,Output, callback
+from dash import Input,Output,State
 import json
-import dash
 import io
 from dash import html
 from dash.exceptions import PreventUpdate
@@ -61,8 +60,6 @@ def register_callbacks(app):
 
                         elements = mapear_grafo(json_data)
                         print(elements)
-                        #children.append(html.Pre(json.dumps(json_data, indent=2)))
-                        
                 except Exception as e:
                     print(f"Error: {type(e).__name__}")
                     print(f"Description: {e}")
@@ -73,3 +70,20 @@ def register_callbacks(app):
             return elements,stylesheet
         else:
             raise PreventUpdate
+        
+    
+
+    @app.callback(
+    Output('network-graph', 'generateImage'),
+    Input('network-graph', 'elements'),
+    )
+    def update_generate_image(elements):
+        return {'type': 'png', 'action': 'store'}
+
+    @app.callback(
+        Output('image-data-store', 'data'),
+        Input('network-graph', 'imageData')
+    )
+    def store_image_data(imageData):
+        return imageData
+
