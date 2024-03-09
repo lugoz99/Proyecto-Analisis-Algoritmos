@@ -87,3 +87,21 @@ def register_callbacks(app):
     def store_image_data(imageData):
         return imageData
 
+    @app.callback(
+    Output('form-data-store', 'data'),
+    [Input('aceptar', 'n_clicks')],
+    [State('n-nodes-input', 'value'),
+     State('is-complete-input', 'value'),
+     State('is-connected-input', 'value'),
+     State('is-weighted-input', 'value'),
+     State('is-directed-input', 'value')]
+)
+    def store_form_data(n_clicks, n_nodes, is_complete, is_connected, is_weighted, is_directed):
+        if n_clicks:
+            return {
+                'n_nodes': n_nodes,
+                'is_complete': is_complete,
+                'is_connected': is_connected,
+                'is_weighted': is_weighted,
+                'is_directed': is_directed,
+            }

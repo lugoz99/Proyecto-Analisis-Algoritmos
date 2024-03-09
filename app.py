@@ -1,7 +1,7 @@
 # app.py
 # Importaciones de librerías
 import dash
-from dash import html, dcc,ctx
+from dash import html, dcc
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
@@ -38,24 +38,7 @@ app.layout = html.Div([
     
 ])
 # Callbacks para manejar la navegación y el almacenamiento de datos del formulario
-@app.callback(
-    Output('form-data-store', 'data'),
-    [Input('aceptar', 'n_clicks')],
-    [State('n-nodes-input', 'value'),
-     State('is-complete-input', 'value'),
-     State('is-connected-input', 'value'),
-     State('is-weighted-input', 'value'),
-     State('is-directed-input', 'value')]
-)
-def store_form_data(n_clicks, n_nodes, is_complete, is_connected, is_weighted, is_directed):
-    if n_clicks:
-        return {
-            'n_nodes': n_nodes,
-            'is_complete': is_complete,
-            'is_connected': is_connected,
-            'is_weighted': is_weighted,
-            'is_directed': is_directed,
-        }
+
 
 # Callback para mostrar la página correspondiente
 @app.callback(
@@ -69,8 +52,6 @@ def store_form_data(n_clicks, n_nodes, is_complete, is_connected, is_weighted, i
 def display_page(form_data,pathname,n_clicks,imageData):
     if pathname == '/grafica':
         if imageData is not None:
-            # Aquí puedes utilizar imageData para mostrar la imagen.
-            # Por ejemplo, puedes crear una etiqueta img con los datos de la imagen:
             dcc.Store(id='image-data-store', data=imageData)
             img = html.Img(src=imageData)
             return html.Div(img)
