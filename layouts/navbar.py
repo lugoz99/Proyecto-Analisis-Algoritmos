@@ -91,13 +91,13 @@ navbar = dbc.NavbarSimple(
                         children=[
                             dbc.DropdownMenuItem(
                                 html.Div(
-                                    dbc.Button("PNG", color="primary", className="mx-auto d-flex w-100"),
+                                    dbc.Button("PNG", color="primary", className="mx-auto d-flex w-100", id="btn-get-png"),
                                     className="d-flex"
                                 ),
                         ),
                             dbc.DropdownMenuItem(
                                 html.Div(
-                                    dbc.Button("JPG", color="secondary", className="mx-auto d-flex w-100"),
+                                    dbc.Button("JPG", color="secondary", className="mx-auto d-flex w-100",id="btn-get-jpg"),
                                     className="d-flex"
                                 ),
                             ),

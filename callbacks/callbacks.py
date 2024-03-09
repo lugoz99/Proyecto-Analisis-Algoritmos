@@ -1,5 +1,5 @@
 import base64
-from dash import Input,Output,State
+from dash import Input,Output,State,no_update,callback_context
 import json
 import io
 from dash import html
@@ -9,7 +9,7 @@ import traceback
 
 
 
-
+# Mapeo para el json
 def mapear_grafo(data_Json):
     if isinstance(data_Json, dict):
         graph_data = data_Json["graph"][0]["data"]
@@ -39,12 +39,14 @@ stylesheet = [
     {"selector": "edge", "style": {"width": 3, "label": "data(weight)"}},
 ]
 
+# Callbacks
 def register_callbacks(app):
     @app.callback(
     Output('network-elements', 'data'),
     Output('network-stylesheet', 'data'),
     [Input('upload-json', 'contents'), Input('upload-json', 'filename')]
 )
+    # Función para cargar el archivo JSON y retornar los elementos y el estilo
     def update_output(list_of_contents, list_of_names):
         elements = None
         if list_of_contents is not None:
@@ -72,14 +74,14 @@ def register_callbacks(app):
             raise PreventUpdate
         
     
-
+    # Callbacks para la página de personalización en donde se guarda la imagen 
     @app.callback(
-    Output('network-graph', 'generateImage'),
+    Output('network-graph', 'generateImage',allow_duplicate=True),
     Input('network-graph', 'elements'),
     )
     def update_generate_image(elements):
         return {'type': 'png', 'action': 'store'}
-
+    
     @app.callback(
         Output('image-data-store', 'data'),
         Input('network-graph', 'imageData')
@@ -87,6 +89,7 @@ def register_callbacks(app):
     def store_image_data(imageData):
         return imageData
 
+    # callback que guarda los datos del formulario
     @app.callback(
     Output('form-data-store', 'data'),
     [Input('aceptar', 'n_clicks')],
@@ -105,3 +108,21 @@ def register_callbacks(app):
                 'is_weighted': is_weighted,
                 'is_directed': is_directed,
             }
+        
+
+    # Callback para la generancion de una imagen de tipo png y jpg
+    @app.callback(
+        Output('network-graph', 'generateImage'),
+        [Input('btn-get-jpg', 'n_clicks'),
+        Input('btn-get-png', 'n_clicks'),
+        ])
+    def update_output(jpg_clicks, png_clicks):
+        ctx = callback_context 
+
+        if not ctx.triggered:
+            return no_update
+        else:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            image_type = button_id.split('-')[-1]
+
+            return {'type': image_type, 'action': 'download', 'filename': 'grafo','options': {'full': True}}    
