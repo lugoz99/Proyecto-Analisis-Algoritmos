@@ -65,7 +65,7 @@ navbar = dbc.NavbarSimple(
                     dbc.DropdownMenuItem("Open File", id='open-file', href="/cargar-json"),
                     dbc.DropdownMenuItem("Close File", id='close-file'),
                     dbc.DropdownMenuItem("Save File", id='save-file'),
-                    dbc.DropdownMenuItem("Save File As", id='save-file-as'),
+                    dbc.DropdownMenuItem("Save File As", id='save-file-as', href="/guardar-como"),
                     # Agrega aquí más operaciones si las necesitas
                 ],
                 nav=True,

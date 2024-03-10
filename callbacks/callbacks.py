@@ -1,11 +1,11 @@
 import base64
-from dash import Input,Output,State,no_update,callback_context
+from dash import Input,Output,State,no_update,callback_context,dcc
 import json
 import io
 from dash import html
 from dash.exceptions import PreventUpdate
 import traceback
-
+import os
 
 
 
@@ -34,6 +34,7 @@ def mapear_grafo(data_Json):
                 )
         return nodes+edges
 
+#TODO: Pendiente de es estilo
 stylesheet = [
     {"selector": "node", "style": {"width": 50, "height": 50, "label": "data(label)", "font-size": "14px"}},
     {"selector": "edge", "style": {"width": 3, "label": "data(weight)"}},
@@ -88,6 +89,14 @@ def register_callbacks(app):
     )
     def store_image_data(imageData):
         return imageData
+    
+
+    @app.callback(
+        Output('network-graph-elements', 'data'),
+        Input('network-graph', 'elements')
+    )
+    def store_elements_data(elements):
+        return elements
 
     # callback que guarda los datos del formulario
     @app.callback(
@@ -125,4 +134,30 @@ def register_callbacks(app):
             button_id = ctx.triggered[0]['prop_id'].split('.')[0]
             image_type = button_id.split('-')[-1]
 
-            return {'type': image_type, 'action': 'download', 'filename': 'grafo','options': {'full': True}}    
+            return {'type': image_type, 'action': 'download', 'filename': 'grafo','options': {'full': True}}
+
+
+
+
+    # Callback para guardar el archivo JSON , Dandole un nombre
+    @app.callback(
+    Output("download", "data"),
+    [Input("btn", "n_clicks"), Input("input", "value")],
+    [State("network-graph-elements", "data")], # Aquí puedes agregar más estados si los necesitas
+    prevent_initial_call=True,
+    )
+    def func(n_clicks, value,data):
+        if n_clicks > 0 and value is not None and data is not None:
+            # Guardar el objeto JSON en un archivo en el servidor
+            with open(os.path.join(os.getcwd(),'data', value + ".json"), 'w') as f:
+                json.dump(data, f)
+            # Devolver los datos para descargar en el sistema del usuario
+            return dcc.send_string(json.dumps(data), filename=value + ".json")
+
+
+    @app.callback(
+        Output('network-graph-elements', 'data'),
+        Input('network-graph', 'elements')
+    )
+    def store_elements_data(elements):
+        return elements
