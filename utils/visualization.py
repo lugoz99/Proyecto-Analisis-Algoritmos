@@ -26,7 +26,7 @@ def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete)
     # Añadir pesos a las aristas, si se seleccionó esa opción
     if is_weighted:
         for (u, v) in G.edges():
-            G.edges[u,v]['weight'] = random.randint(1,1001)
+            G.edges[u,v]['weight'] = random.randint(1,100)
 
     # Convertir el gráfico de NetworkX a un formato que Cytoscape puede utilizar
     cyto_elements = [

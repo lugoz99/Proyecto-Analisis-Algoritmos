@@ -72,10 +72,10 @@ app.layout = html.Div([
     Input('url', 'pathname'),
     Input('random-clicks', 'data')],
     [State('image-data-store', 'data')],
-    Input('network-graph-elements', 'data'),
+   # Input('network-graph-elements', 'data'),
     prevent_initial_call=True
 )
-def display_page(form_data,pathname,n_clicks,imageData,data):
+def display_page(form_data,pathname,n_clicks,imageData):
     if pathname == '/grafica':
         if imageData is not None:
             dcc.Store(id='image-data-store', data=imageData)
@@ -96,7 +96,6 @@ def display_page(form_data,pathname,n_clicks,imageData,data):
         # TODO: Agregar la página para cargar un archivo JSON
             return upload_component
     if pathname == '/guardar-como':
-         print("Guardando archivo de los datos",data)
          return rename_file
   
     else:
@@ -109,58 +108,6 @@ def grafo_personalizado(form_data):
     if n_nodes is not None:
         return update_network_personalizado(n_nodes, is_weighted, is_directed, is_connected, is_complete)
     return None, None
-
-
-
-
-
-
-
-
-@app.callback(
-    Output("download", "data"),
-    [Input("btn", "n_clicks"), Input("input", "value")],
-    [State("network-graph-elements", "data")], # Aquí puedes agregar más estados si los necesitas
-    prevent_initial_call=True,
-)
-def func(n_clicks, value,data):
-    if n_clicks > 0 and value is not None and data is not None:
-        # Guardar el objeto JSON en un archivo en el servidor
-        with open(os.path.join(os.getcwd(),'data', value + ".json"), 'w') as f:
-            json.dump(data, f)
-        # Devolver los datos para descargar en el sistema del usuario
-        return dcc.send_string(json.dumps(data), filename=value + ".json")
-
-
-
-
-
-# @app.callback(
-#     Output('page-content', 'children', allow_duplicate=True),
-#     [Input('network-elements', 'data'), 
-#     Input('network-stylesheet', 'data')],
-#     prevent_initial_call=True
-# )
-# def update_graph(elements, stylesheet):
-#     print("Actualizando el grafo")
-#     print(elements)
-#     return get_graph_div(elements, stylesheet)
-
-
-
-
-
-# Callback para actualizar los datos almacenados cuando los elementos del grafo cambian
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -91,12 +91,7 @@ def register_callbacks(app):
         return imageData
     
 
-    @app.callback(
-        Output('network-graph-elements', 'data'),
-        Input('network-graph', 'elements')
-    )
-    def store_elements_data(elements):
-        return elements
+
 
     # callback que guarda los datos del formulario
     @app.callback(
