@@ -6,8 +6,6 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 import dash_cytoscape as cyto
-import os
-import json
 
 #Importaciones de carpetas y funciones
 from layouts.navbar import navbar
@@ -16,6 +14,7 @@ from utils.visualization import update_network,update_network_personalizado
 from helpers.form import get_form_data
 from layouts.general_layouts import upload_component, rename_file
 from callbacks.callbacks import register_callbacks
+from utils.config import style_node, style_edge
 
 cyto.load_extra_layouts()
 
@@ -26,8 +25,21 @@ register_callbacks(app)
 # Crear el diseño de la aplicación
 
 # función para obtener el div del grafo de la red
-def get_graph_div(elements, stylesheet=None):
+def get_graph_div(elements = [], stylesheet=None):
     return html.Div(id='network-graph-container', className="container", children=[
+         html.Div([
+            dcc.Input(id='node-id', type='text', placeholder='Node ID'),
+            dcc.Input(id='node-label', type='text', placeholder='Node Label'),
+            html.Button('Agregar nodo', id='add-node-button'),
+        ]),
+
+        html.Div([
+            dcc.Input(id='edge-id', type='text', placeholder='Edge ID'),
+            dcc.Input(id='source-id', type='text', placeholder='Source Node ID'),
+            dcc.Input(id='target-id', type='text', placeholder='Target Node ID'),
+            html.Button('Agregar arista', id='add-edge-button'),
+        ]),
+        
         dcc.Loading(
             id="loading-graph",
             type="circle",
@@ -56,7 +68,6 @@ app.layout = html.Div([
     dcc.Store(id='random-clicks', data=0),
     dcc.Store(id='image-data-store'),
     dcc.Store(id='network-graph-elements', data=None),
-    #get_graph_div([], stylesheet=None) , # Asegúrate de que get_graph_div está definido antes de usarlo aquí
     navbar,
     html.Div(id='page-content'),
 
@@ -97,6 +108,12 @@ def display_page(form_data,pathname,n_clicks,imageData):
             return upload_component
     if pathname == '/guardar-como':
          return rename_file
+    
+    if pathname == '/editor':
+        return get_graph_div(elements=[], stylesheet=[style_node, style_edge])
+    
+   
+         
   
     else:
         return "Esta es la página de inicio"  # Puedes reemplazar esto con tu propia página de inicio
@@ -118,6 +135,33 @@ def grafo_personalizado(form_data):
 )
 def update_random_clicks(n_clicks):
     return n_clicks
+
+
+
+
+@app.callback(
+    Output('network-graph', 'elements',allow_duplicate=True),
+    [Input('add-node-button', 'n_clicks'), Input('add-edge-button', 'n_clicks')],
+    [State('network-graph', 'elements'), State('node-id', 'value'), State('node-label', 'value'), State('edge-id', 'value'), State('source-id', 'value'), State('target-id', 'value')]
+)
+def update_elements(add_node_clicks, add_edge_clicks, elements, node_id, node_label, edge_id, source_id, target_id):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return elements
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id == 'add-node-button':
+        elements.append({
+            'data': {'id': node_id, 'label': node_label},
+            'position': {'x': 150, 'y': 100}
+        })
+    elif button_id == 'add-edge-button':
+        elements.append({
+            'data': {'id': edge_id, 'source': source_id, 'target': target_id, 'weight': 0},
+        })
+
+    return elements
+
 
 
 

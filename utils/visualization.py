@@ -2,6 +2,9 @@ import random
 import itertools
 import networkx as nx
 
+
+from utils.config import style_node, style_edge
+
 def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete):
     # Crear un grafo vacío
     if not is_directed:
@@ -10,6 +13,7 @@ def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete)
     else:
         G = nx.DiGraph()
         edge_arrow_shape = 'triangle' 
+        style_edge['style']['target-arrow-shape'] = edge_arrow_shape
 
     # Añadir nodos
     G.add_nodes_from(range(num_nodes))
@@ -29,31 +33,20 @@ def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete)
             G.edges[u,v]['weight'] = random.randint(1,100)
 
     # Convertir el gráfico de NetworkX a un formato que Cytoscape puede utilizar
+    # TODO : COMO ASOCIO VALOR,LABEL
     cyto_elements = [
         {'data': {'id': str(node)}} for node in G.nodes()
     ]
+#     cyto_elements.extend([
+#     {'data': {'source': str(edge[0]), 'target': str(edge[1]), 'weight': str(G.edges[edge]['weight']) if is_weighted else None, 'label': str(G.edges[edge]['weight']) if is_weighted else None}} for edge in G.edges()
+# ])
+    
     cyto_elements.extend([
-    {'data': {'source': str(edge[0]), 'target': str(edge[1]), 'weight': str(G.edges[edge]['weight']) if is_weighted else None, 'label': str(G.edges[edge]['weight']) if is_weighted else None}} for edge in G.edges()
+    {'data': {'source': str(edge[0]), 'target': str(edge[1]), 'weight': str(G.edges[edge].get('weight', 0)), 'label': str(G.edges[edge].get('weight', 0))}} for edge in G.edges()
 ])
 
-    node_style = {
-        'selector': 'node',
-        'style': {
-            'background-color': '#BFD7B5',
-            'label': 'data(id)'
-        }
-    }
-
-    edge_style = {
-        'selector': 'edge',
-        'style': {
-            'curve-style': 'bezier',
-            'target-arrow-shape': edge_arrow_shape,
-            'label': 'data(label)',
-            'font-size': '10px'
-        }
-    }
-    return cyto_elements, [node_style,edge_style]
+    
+    return cyto_elements, [style_node, style_edge]
 
 def update_network():
     # Generar características aleatorias
