@@ -83,7 +83,7 @@ app.layout = html.Div([
     Input('url', 'pathname'),
     Input('random-clicks', 'data')],
     [State('image-data-store', 'data')],
-   # Input('network-graph-elements', 'data'),
+   #Input('network-graph-elements', 'data'),
     prevent_initial_call=True
 )
 def display_page(form_data,pathname,n_clicks,imageData):
@@ -161,6 +161,8 @@ def update_elements(add_node_clicks, add_edge_clicks, elements, node_id, node_la
         })
 
     return elements
+
+
 
 
 
