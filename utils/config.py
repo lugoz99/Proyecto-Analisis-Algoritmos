@@ -1,8 +1,9 @@
  #TODO: Esto es una configuracion inicial de los nodos y aristas
+#TODO: Pendiente de es estilo, DEL LABEL 
 style_node = {
     "selector":"node",
     'style': {
-                'content': 'data(id)',
+                'content': 'data(label)',
                 'text-valign': 'center',
                 'color': 'black',
                 'background-color': '#5dade2',

@@ -155,4 +155,6 @@ def register_callbacks(app):
         Input('network-graph', 'elements')
     )
     def store_elements_data(elements):
-        return elements
+        if elements:
+            return elements
+        return no_update
