@@ -34,18 +34,14 @@ def mapear_grafo(data_Json):
                 )
         return nodes+edges
 
-#TODO: Pendiente de es estilo
-stylesheet = [
-    {"selector": "node", "style": {"width": 50, "height": 50, "label": "data(label)", "font-size": "14px"}},
-    {"selector": "edge", "style": {"width": 3, "label": "data(weight)"}},
-]
 
 # Callbacks
 def register_callbacks(app):
     @app.callback(
     Output('network-elements', 'data'),
     Output('network-stylesheet', 'data'),
-    [Input('upload-json', 'contents'), Input('upload-json', 'filename')]
+    [Input('upload-json', 'contents'), 
+     Input('upload-json', 'filename')]
 )
     # Función para cargar el archivo JSON y retornar los elementos y el estilo
     def update_output(list_of_contents, list_of_names):
@@ -62,7 +58,7 @@ def register_callbacks(app):
                         json_data = json.load(str_io)
 
                         elements = mapear_grafo(json_data)
-                        print(elements)
+                        print("mapeo")
                 except Exception as e:
                     print(f"Error: {type(e).__name__}")
                     print(f"Description: {e}")
@@ -70,7 +66,7 @@ def register_callbacks(app):
                     children.append(html.Div([
                         'Hubo un error procesando este archivo.'
                     ]))
-            return elements,stylesheet
+            return elements,[]
         else:
             raise PreventUpdate
         

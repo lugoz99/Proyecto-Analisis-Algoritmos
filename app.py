@@ -189,12 +189,12 @@ def display_page(form_data,pathname,n_clicks,elements,imageData):
             return get_graph_div(elements, stylesheet)
     if pathname == '/cargar-json':
         # TODO: Agregar la página para cargar un archivo JSON
+            print(elements)
             return upload_component
     if pathname == '/guardar-como':
          return rename_file
     
     if pathname == '/editor':
-        print("Lista vacia",elements)
         return get_graph_div(elements,stylesheet=[style_node, style_edge])
     
    
