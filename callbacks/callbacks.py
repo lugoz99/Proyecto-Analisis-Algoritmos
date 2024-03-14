@@ -131,8 +131,9 @@ def register_callbacks(app):
 
     def func(n_clicks,elements):
         if n_clicks > 0:
+            print("tamaño de la lista",len(elements))
             # Crear dos DataFrames vacíos con los nodos como índices y columnas
-            nodes = [str(i) for i in range(11)]
+            nodes = [str(i) for i in range(len(elements))]
             df_binary = pd.DataFrame(0, index=nodes, columns=nodes)
             df_weights = pd.DataFrame(0, index=nodes, columns=nodes)
 
