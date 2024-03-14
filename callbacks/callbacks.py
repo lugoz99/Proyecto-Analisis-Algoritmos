@@ -53,11 +53,31 @@ def register_callbacks(app):
             'is_weighted': is_weighted,
             'is_directed': is_directed
         }
+        return form_data
+    
+
+    #TODO: AQUI VOY A EDITAR EL CALLBACK PARA QUE GUARDE LOS DATOS DEL FORMULARIO DE EDICION
+    @app.callback(
+    Output('form-edit-store', 'data'),
+    [Input('close-update"', 'n_clicks')],
+    [State('input-label', 'value'),
+     State('input-value', 'value'),
+     State('input-color', 'value')],
+    )
+    def store_form_edit(n_clicks, label, valor, color):
+        if not n_clicks:
+            return no_update
+        
         print(form_data)
+        form_data = {
+            'label': label,
+            'value': valor,
+            'color': color,
+        }
         return form_data
         
 
-    # Callback para la generancion de una imagen de tipo png y jpg
+    #TODO:Callback para la generancion de una imagen de tipo png y jpg
     @app.callback(
         Output('network-graph', 'generateImage'),
         [Input('btn-get-jpg', 'n_clicks'),
@@ -101,6 +121,7 @@ def register_callbacks(app):
 
 
 # ****************************************************************
+# ***Callback para descargar la matriz de adyacencia en Excel***
             
     @app.callback(
         Output("download", "data",allow_duplicate=True),

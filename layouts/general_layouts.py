@@ -57,6 +57,7 @@ rename_file = html.Div([
                     dcc.Input(
                         id="input", 
                         type="text", 
+                        required=True,
                         placeholder="Renombrar archivo grafo.json",
                         className="p-2 mt-2",
                         style={'flex': '1', 'marginRight': '10px'}

@@ -11,9 +11,9 @@ import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
 #Importaciones de carpetas y funciones
 from layouts.navbar import header
-from layouts.form_page import modal
+from layouts.form_page import modal,modal_edit_node
 from utils.visualization import update_network,update_network_personalizado,load_json_file
-from helpers.form import get_form_data
+from helpers.form import get_form_data, get_form_node_edit
 from layouts.general_layouts import rename_file
 from callbacks.callbacks import register_callbacks
 from utils.config import style_node, style_edge
@@ -27,6 +27,7 @@ cyto.load_extra_layouts()
 
 app.layout = html.Div([
     modal,
+    modal_edit_node,
     header,
     dcc.Upload(
         id='open-file',
@@ -66,8 +67,7 @@ app.layout = html.Div([
         className="mr-1"  # Espacio a la derecha del botón
     ),
     html.Div([
-    html.Label('Node Label:'),
-    dcc.Input(id="node-label-input", type="text", placeholder="", style={'marginRight':'10px'}),
+    dcc.Input(id="node-label-input", type="text", placeholder="Nodo Seleccionado", style={'marginRight':'10px'}),
 ]),
 ], style={'display': 'flex', 'justifyContent': 'center'}),
 
@@ -75,6 +75,7 @@ app.layout = html.Div([
     rename_file,
     dcc.Store(id='form-data-store'),
     dcc.Store(id='network-elements'),
+    dcc.Store(id='form-edit-store'),
     dcc.Store(id='image-data-store'),
     dcc.Store(id="list_elements"),   
     html.Div(id='container'),
@@ -93,8 +94,9 @@ app.layout = html.Div([
     [Input('form-data-store', 'data')],
     Input('open-file', 'contents'),
     Input('open-file', 'filename'),
+    Input('form-edit-store','data'),
 )
-def update_graph(accept_clicks, form_data,file_name, file_contents):
+def update_graph(accept_clicks, form_data,file_name, file_contents,form_edit_data):
     ctx = dash.callback_context
     if not ctx.triggered:
         return dash.no_update
@@ -108,15 +110,19 @@ def update_graph(accept_clicks, form_data,file_name, file_contents):
             elements = update_network_personalizado(n_nodes, is_weighted, is_directed, is_connected, is_complete)
         else:
             elements = []
+    if button_id == 'update-button':
+        # Actualizar elementos del grafo
+        label, color, size = get_form_node_edit(form_edit_data)
+        print("Entre en actualizar")
+        print(label, color, size)
+
     elif button_id == 'open-file' and file_contents is not None and file_name is not None:
         # Aquí puedes procesar y visualizar los datos del archivo
         # Por ejemplo, si estás cargando un archivo JSON:
-         print("ENTRE AQUI",file_contents,file_name)
          v = load_json_file(file_name,file_contents)
          if v is not None:
              elements = v
 
-   
 
     return elements
 
@@ -146,7 +152,8 @@ def add_node(n_clicks, elements):
 
     # Create a new node
     new_node = {
-        'data': {'id': generate_id(), 'label': 'Node {}'.format(n_clicks)}
+        'data': {'id': generate_id(), 'label': 'Node {}'.format(n_clicks)},
+        'position': {'x': random.randint(0, 500), 'y': random.randint(0, 500)}  # Agrega coordenadas aleatorias al nodo
     }
 
     # Add the new node to the existing elements
@@ -156,23 +163,74 @@ def add_node(n_clicks, elements):
 
 
 @app.callback(
-    Output('container', 'children'),
-    Input('list_elements', 'data'),
+    Output('list_elements', 'data',allow_duplicate=True),
+    [Input('delete-button', 'n_clicks')],
+    [State('list_elements', 'data'),
+     State('network-graph', 'selectedNodeData')]
 )
-def render_nodes(elements):
-    if elements is not None:
-        return html.Div([
-            html.H3('Nodos'),
-            html.Ul([
-                html.Li('ID: {}, Label: {}'.format(node['data']['id'], node['data']['label']))
-                for node in elements
-            ])
-        ])
+def delete_node(n_clicks, elements, selected_node):
+    if n_clicks is None:
+        # Prevents the callback from being triggered on app load
+        raise PreventUpdate
+
+    if elements is not None and selected_node is not None:
+        selected_node = selected_node[0]  # Accede al primer elemento de selected_node
+        print('Deleting node:', selected_node['id'])
+        # Remove the selected node from the elements
+        elements = [element for element in elements if element['data']['id'] != selected_node['id']]
+    return elements 
+
+
+
+
+
+@app.callback(
+    Output('node-label-input', 'value'),
+    Input('network-graph', 'tapNodeData'),
+)
+def update_input(tapNodeData):
+    if tapNodeData is not None:
+        # Si se seleccionó un nodo, devuelve su etiqueta
+        return tapNodeData['label']
     else:
-        return html.Div([
-            html.H3('Nodos'),
-            html.P('No hay nodos')
-        ])
+        # Si no se seleccionó ningún nodo, devuelve una cadena vacía
+        return ''
+
+
+# ****************************************************************************************
+
+# @app.callback(
+#     Output('container', 'children'),
+#     Input('list_elements', 'data'),
+# )
+# def render_nodes(elements):
+#     if elements is not None:
+#         return html.Div([
+#             html.H3('Nodos'),
+#             html.Ul([
+#                 html.Li('ID: {}, Label: {}'.format(node['data']['id'], node['data']['label']))
+#                 for node in elements
+#             ])
+#         ])
+#     else:
+#         return html.Div([
+#             html.H3('Nodos'),
+#             html.P('No hay nodos')
+#         ])
+    
+@app.callback(
+    Output('network-graph', 'elements'),
+    Input('list_elements', 'data'),
+    State('network-graph', 'elements')
+)
+def update_graph_cytos(elements):
+    if elements is not None:
+        print("Actualizando elementos del grafo")
+        # Return the elements directly to the Cytoscape component
+        return elements
+    else:
+        # If there are no elements, return an empty list
+        return []
 
 
 
@@ -261,6 +319,19 @@ def display_page(n_clicks, imageData):
     Output("modal", "is_open"),
     [Input("generate-button", "n_clicks"), Input("close", "n_clicks")],
     [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+
+@app.callback(
+    Output("modal-edit-node", "is_open"),
+    [Input("update-button", "n_clicks"),
+    Input("close-update", "n_clicks")],
+    [State("modal-edit-node", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
     if n1 or n2:
