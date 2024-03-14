@@ -1,7 +1,12 @@
+import io
 import random
 import itertools
+import traceback
 import networkx as nx
+import base64
+import json
 
+from dash.exceptions import PreventUpdate
 
 from utils.config import style_node, style_edge
 
@@ -35,8 +40,8 @@ def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete)
     # Convertir el gráfico de NetworkX a un formato que Cytoscape puede utilizar
     # TODO : COMO ASOCIO VALOR,LABEL
     cyto_elements = [
-        {'data': {'id': str(node)}} for node in G.nodes()
-    ]
+    {'data': {'id': str(node), 'label': str(node)}} for node in G.nodes()
+]
 #     cyto_elements.extend([
 #     {'data': {'source': str(edge[0]), 'target': str(edge[1]), 'weight': str(G.edges[edge]['weight']) if is_weighted else None, 'label': str(G.edges[edge]['weight']) if is_weighted else None}} for edge in G.edges()
 # ])
@@ -46,7 +51,7 @@ def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete)
 ])
 
     
-    return cyto_elements, [style_node, style_edge]
+    return cyto_elements
 
 def update_network():
     # Generar características aleatorias
@@ -89,3 +94,49 @@ def parse_graph_json(graph_json):
 
 
 
+# -----------------------------------
+
+def mapear_grafo(data_Json):
+    if isinstance(data_Json, dict):
+        graph_data = data_Json["graph"][0]["data"]
+
+# Crea los nodos y aristas para Dash-Cytoscape
+        nodes = []
+        edges = []
+
+        for node in graph_data:
+            node_id = str(node["id"])
+            nodes.append({"data": {"id": node_id, "label": node["label"]}})
+
+            for linked_node in node["linkedTo"]:
+                edges.append(
+                    {
+                        "data": {
+                            "source": node_id,
+                            "target": str(linked_node["nodeId"]),
+                            "weight": linked_node["weight"],
+                        }
+                    }
+                )
+        return nodes+edges
+    
+
+def load_json_file(contents, filename):
+    elements = None
+    if contents is not None and ',' in contents:
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        try:
+            if 'json' in filename:
+                # Assume that the user uploaded a JSON file
+                str_io = io.StringIO(decoded.decode('utf-8'))
+                json_data = json.load(str_io)
+                elements = mapear_grafo(json_data)
+        except Exception as e:
+            print(f"Error: {type(e).__name__}")
+            print(f"Description: {e}")
+            traceback.print_exc()
+            return 'Hubo un error procesando este archivo.'
+        return elements
+    else:
+        raise PreventUpdate

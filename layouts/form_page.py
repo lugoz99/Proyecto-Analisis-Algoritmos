@@ -4,10 +4,7 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 form_page = html.Div(className="card container mt-2 d-flex", children=[
-
-    
     html.H2("Personaliza tu grafo"),
-
     dbc.CardGroup(
         [
             dbc.Label("Número de nodos"),
@@ -40,17 +37,21 @@ form_page = html.Div(className="card container mt-2 d-flex", children=[
             dbc.Checkbox(id="is-directed-input", value=False),
         ]
     ),
-    html.Div(
-        children = [
-            dbc.Button("Aceptar", id="aceptar", color="primary", href="/personalizado", style={"margin-right": "10px"}),
-            dbc.Button("Volver", id="back", color="primary", href="/"),
-        ],
-        style={"display": "flex", 
-               "justify-content": "center", 
-               "align-items": "center",
-               "padding:": "10px 10px 10px 10px",
-               "width": "100%",
-               "height": "50px"}
-    )
-
 ])
+
+
+modal = dbc.Modal(
+    [
+        dbc.ModalHeader("Formulario"),
+        dbc.ModalBody(
+            form_page
+        ),
+        dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close", className="ms-auto", n_clicks=0
+                    )
+                ),
+    ],
+    id="modal",
+    is_open=False,
+)

@@ -6,71 +6,14 @@ from dash import html
 from dash.exceptions import PreventUpdate
 import traceback
 import os
+import dash_cytoscape as cyto
+import pandas as pd
 
-
-
-# Mapeo para el json
-def mapear_grafo(data_Json):
-    if isinstance(data_Json, dict):
-        graph_data = data_Json["graph"][0]["data"]
-
-# Crea los nodos y aristas para Dash-Cytoscape
-        nodes = []
-        edges = []
-
-        for node in graph_data:
-            node_id = str(node["id"])
-            nodes.append({"data": {"id": node_id, "label": node["label"]}})
-
-            for linked_node in node["linkedTo"]:
-                edges.append(
-                    {
-                        "data": {
-                            "source": node_id,
-                            "target": str(linked_node["nodeId"]),
-                            "weight": linked_node["weight"],
-                        }
-                    }
-                )
-        return nodes+edges
 
 
 # Callbacks
 def register_callbacks(app):
-    @app.callback(
-    Output('network-elements', 'data'),
-    Output('network-stylesheet', 'data'),
-    [Input('upload-json', 'contents'), 
-     Input('upload-json', 'filename')]
-)
-    # Función para cargar el archivo JSON y retornar los elementos y el estilo
-    def update_output(list_of_contents, list_of_names):
-        elements = None
-        if list_of_contents is not None:
-            children = []
-            for contents, filename in zip(list_of_contents, list_of_names):
-                content_type, content_string = contents.split(',')
-                decoded = base64.b64decode(content_string)
-                try:
-                    if 'json' in filename:
-                        # Assume that the user uploaded a JSON file
-                        str_io = io.StringIO(decoded.decode('utf-8'))
-                        json_data = json.load(str_io)
 
-                        elements = mapear_grafo(json_data)
-                        print("mapeo")
-                except Exception as e:
-                    print(f"Error: {type(e).__name__}")
-                    print(f"Description: {e}")
-                    traceback.print_exc()
-                    children.append(html.Div([
-                        'Hubo un error procesando este archivo.'
-                    ]))
-            return elements,[]
-        else:
-            raise PreventUpdate
-        
-    
     # Callbacks para la página de personalización en donde se guarda la imagen 
     @app.callback(
     Output('network-graph', 'generateImage',allow_duplicate=True),
@@ -89,10 +32,10 @@ def register_callbacks(app):
 
 
 
-    # callback que guarda los datos del formulario
+    #TODO: callback que guarda los datos del formulario [EN USO]
     @app.callback(
     Output('form-data-store', 'data'),
-    [Input('aceptar', 'n_clicks')],
+    [Input('close', 'n_clicks')],
     [State('n-nodes-input', 'value'),
      State('is-complete-input', 'value'),
      State('is-connected-input', 'value'),
@@ -100,14 +43,18 @@ def register_callbacks(app):
      State('is-directed-input', 'value')]
 )
     def store_form_data(n_clicks, n_nodes, is_complete, is_connected, is_weighted, is_directed):
-        if n_clicks:
-            return {
-                'n_nodes': n_nodes,
-                'is_complete': is_complete,
-                'is_connected': is_connected,
-                'is_weighted': is_weighted,
-                'is_directed': is_directed,
-            }
+        if not n_clicks:
+            return no_update
+
+        form_data = {
+            'n_nodes': n_nodes,
+            'is_complete': is_complete,
+            'is_connected': is_connected,
+            'is_weighted': is_weighted,
+            'is_directed': is_directed
+        }
+        print(form_data)
+        return form_data
         
 
     # Callback para la generancion de una imagen de tipo png y jpg
@@ -132,25 +79,66 @@ def register_callbacks(app):
 
     # Callback para guardar el archivo JSON , Dandole un nombre
     @app.callback(
-    Output("download", "data"),
-    [Input("btn", "n_clicks"), Input("input", "value")],
-    [State("network-graph-elements", "data")], # Aquí puedes agregar más estados si los necesitas
-    prevent_initial_call=True,
+        Output("download", "data"),
+        [Input("save-file-as", "n_clicks")],  # Agregado "save-file-as" como Input
+        [State("network-graph", "elements"), State("input", "value")],  # Cambiado "rename_file" a "input"
+        prevent_initial_call=True,
     )
-    def func(n_clicks, value,data):
-        if n_clicks > 0 and value is not None and data is not None:
+    def func(save_as_clicks, data, filename): 
+        if save_as_clicks > 0 and filename is not None and data is not None:  # Cambiado "n_clicks" a "save_as_clicks"
+            # Serializar los datos a una cadena JSON
+            json_data = json.dumps(data)
+            
             # Guardar el objeto JSON en un archivo en el servidor
-            with open(os.path.join(os.getcwd(),'data', value + ".json"), 'w') as f:
-                json.dump(data, f)
+            with open(os.path.join(os.getcwd(), 'data', filename + ".json"), 'w') as f:
+                f.write(json_data)
+            
             # Devolver los datos para descargar en el sistema del usuario
-            return dcc.send_string(json.dumps(data), filename=value + ".json")
+            return dcc.send_string(json_data, filename=filename + ".json") 
+        else:
+            print("No se ha seleccionado un archivo para guardar") 
 
 
+
+# ****************************************************************
+            
     @app.callback(
-        Output('network-graph-elements', 'data'),
-        Input('network-graph', 'elements')
+        Output("download", "data",allow_duplicate=True),
+        [Input("btn", "n_clicks"), Input("network-graph", "elements")],
+        prevent_initial_call=True,
     )
-    def store_elements_data(elements):
-        if elements:
-            return elements
-        return no_update
+
+    def func(n_clicks,elements):
+        if n_clicks > 0:
+            # Crear dos DataFrames vacíos con los nodos como índices y columnas
+            nodes = [str(i) for i in range(11)]
+            df_binary = pd.DataFrame(0, index=nodes, columns=nodes)
+            df_weights = pd.DataFrame(0, index=nodes, columns=nodes)
+
+            # Iterar sobre las aristas del grafo
+            for element in elements:
+                if 'source' in element['data'] and 'target' in element['data']:
+                    # Para cada arista, establecer el valor correspondiente en el DataFrame al peso de la arista
+                    df_binary.loc[element['data']['source'], element['data']['target']] = 1
+                    df_binary.loc[element['data']['target'], element['data']['source']] = 1
+                    df_weights.loc[element['data']['source'], element['data']['target']] = element['data'].get('weight', 0)
+                    df_weights.loc[element['data']['target'], element['data']['source']] = element['data'].get('weight', 0)
+
+            # Agregar una columna vacía al principio de cada DataFrame
+            # df_binary.insert(0, '', '')
+            # df_weights.insert(0, '', '')
+
+            # Agregar el título 'Origen/Destino' en la primera celda superior izquierda
+            df_binary.columns = ['Origen/Destino'] + [str(i) for i in df_binary.columns[1:]]
+            df_weights.columns = ['Origen/Destino'] + [str(i) for i in df_weights.columns[1:]]
+
+            # Generar un nombre de archivo automáticamente
+            file_path = os.path.join(os.getcwd(), 'data', "adjacency_matrix.xlsx")
+
+            # Crear un escritor de Excel y escribir ambos DataFrames en diferentes hojas
+            with pd.ExcelWriter(file_path) as writer:
+                df_binary.to_excel(writer, sheet_name='Binary', index=False)
+                df_weights.to_excel(writer, sheet_name='Weights', index=False)
+
+            # Devolver los datos para que se descarguen en el sistema del usuario
+            return dcc.send_file(file_path)
