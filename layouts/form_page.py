@@ -55,3 +55,49 @@ modal = dbc.Modal(
     id="modal",
     is_open=False,
 )
+
+
+form_edit_node = dbc.Form(
+    [
+        dbc.CardGroup(
+            [
+                dbc.Label("Label", className="mr-2"),
+                dbc.Input(type="text", id="input-label", placeholder="Enter label"),
+            ],
+            className="mr-3",
+        ),
+        dbc.CardGroup(
+            [
+                dbc.Label("Value", className="mr-2"),
+                dbc.Input(type="text", id="input-value", placeholder="Enter value"),
+            ],
+            className="mr-3",
+        ),
+        dbc.CardGroup(
+            [
+                dbc.Label("Color", className="mr-2"),
+                dbc.Input(type="text", id="input-color", placeholder="Enter color"),
+            ],
+            className="mr-3",
+        ),
+    ],
+)
+
+
+
+
+modal_edit_node = dbc.Modal(
+    [
+        dbc.ModalHeader("Editar Nodo"),
+        dbc.ModalBody(
+            form_edit_node
+        ),
+        dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="close-update", className="ms-auto", n_clicks=0
+                    )
+                ),
+    ],
+    id="modal-edit-node",
+    is_open=False,
+)
