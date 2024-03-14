@@ -73,11 +73,16 @@ app.layout = html.Div([
 
 
     rename_file,
+    # Formulario
     dcc.Store(id='form-data-store'),
+
+    # Guardar json y sus elementos 
     dcc.Store(id='network-elements'),
     dcc.Store(id='form-edit-store'),
     dcc.Store(id='image-data-store'),
-    dcc.Store(id="list_elements"),   
+    # Agregar nuevos elementos
+    dcc.Store(id="list_elements"), 
+
     html.Div(id='container'),
     html.Div(id='page-content',children=cyto.Cytoscape(id='network-graph',
                                                         layout={'name': 'circle'},
@@ -88,16 +93,44 @@ app.layout = html.Div([
 
 ])
 
+
+def generate_id(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def add_node(elements):
+
+
+    # If elements is not None, update the global variable
+    if elements is None:
+        elements = []
+
+    # Create a new node
+    new_node = {
+        'data': {'id': generate_id(), 'label': 'New node'},
+        'position': {'x': random.randint(0, 500), 'y': random.randint(0, 500)}  # Agrega coordenadas aleatorias al nodo
+    }
+
+    # Add the new node to the existing elements
+    elements.append(new_node)
+
+
+    return elements
+
+
+
 @app.callback(
     Output('network-graph', 'elements',allow_duplicate=True),
     [Input('close', 'n_clicks')],
     [Input('form-data-store', 'data')],
     Input('open-file', 'contents'),
     Input('open-file', 'filename'),
+    Input('add-node-button','n_clicks'),
     Input('form-edit-store','data'),
 )
-def update_graph(accept_clicks, form_data,file_name, file_contents,form_edit_data):
+def update_graph(accept_clicks, form_data, file_contents, file_name, add_node_clicks, form_edit_data):
     ctx = dash.callback_context
+    elements = []
     if not ctx.triggered:
         return dash.no_update
     else:
@@ -115,6 +148,12 @@ def update_graph(accept_clicks, form_data,file_name, file_contents,form_edit_dat
         label, color, size = get_form_node_edit(form_edit_data)
         print("Entre en actualizar")
         print(label, color, size)
+    
+    if button_id == 'add-node-button':
+        # Agregar un nodo al grafo
+        elements = add_node(elements)
+
+    
 
     elif button_id == 'open-file' and file_contents is not None and file_name is not None:
         # Aquí puedes procesar y visualizar los datos del archivo
@@ -130,36 +169,16 @@ def update_graph(accept_clicks, form_data,file_name, file_contents,form_edit_dat
 
 
 
-def generate_id(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+
 
 # Callback for adding nodes
     
-@app.callback(
-    Output('list_elements', 'data'),
-    [Input('add-node-button', 'n_clicks')],
-    [State('list_elements', 'data')]
-)
-def add_node(n_clicks, elements):
+# @app.callback(
+#     Output('list_elements', 'data'),
+#     [Input('add-node-button', 'n_clicks')],
+#     [State('list_elements', 'data')],
+# )
 
-    if n_clicks is None:
-        # Prevents the callback from being triggered on app load
-        raise PreventUpdate
-
-    # If elements is not None, update the global variable
-    if elements is None:
-        elements = []
-
-    # Create a new node
-    new_node = {
-        'data': {'id': generate_id(), 'label': 'Node {}'.format(n_clicks)},
-        'position': {'x': random.randint(0, 500), 'y': random.randint(0, 500)}  # Agrega coordenadas aleatorias al nodo
-    }
-
-    # Add the new node to the existing elements
-    elements.append(new_node)
-
-    return elements
 
 
 @app.callback(
@@ -218,20 +237,15 @@ def update_input(tapNodeData):
 #             html.P('No hay nodos')
 #         ])
     
-@app.callback(
-    Output('network-graph', 'elements'),
-    Input('list_elements', 'data'),
-    State('network-graph', 'elements')
-)
-def update_graph_cytos(elements):
-    if elements is not None:
-        print("Actualizando elementos del grafo")
-        # Return the elements directly to the Cytoscape component
-        return elements
-    else:
-        # If there are no elements, return an empty list
-        return []
-
+# @app.callback(
+#     Output('network-graph', 'elements'),
+#     Input('list_elements', 'data'),
+# )
+# def update_graph_cytos(elements):
+#     if elements is not None:
+#         # Return the elements directly to the Cytoscape component
+#         return elements
+   
 
 
 

@@ -22,6 +22,7 @@ def register_callbacks(app):
     def update_generate_image(elements):
         return {'type': 'png', 'action': 'store'}
     
+    
     @app.callback(
         Output('image-data-store', 'data'),
         Input('network-graph', 'imageData')
@@ -132,7 +133,7 @@ def register_callbacks(app):
     def func(n_clicks,elements):
         if n_clicks > 0:
             # Crear dos DataFrames vacíos con los nodos como índices y columnas
-            nodes = [str(i) for i in range(11)]
+            nodes = [str(i) for i in range(len(elements))]
             df_binary = pd.DataFrame(0, index=nodes, columns=nodes)
             df_weights = pd.DataFrame(0, index=nodes, columns=nodes)
 
