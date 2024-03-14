@@ -71,7 +71,7 @@ app.layout = html.Div([
 ]),
 ], style={'display': 'flex', 'justifyContent': 'center'}),
 
-
+    #Guarda JSON
     rename_file,
     # Formulario
     dcc.Store(id='form-data-store'),
@@ -200,9 +200,6 @@ def delete_node(n_clicks, elements, selected_node):
     return elements 
 
 
-
-
-
 @app.callback(
     Output('node-label-input', 'value'),
     Input('network-graph', 'tapNodeData'),
@@ -215,27 +212,6 @@ def update_input(tapNodeData):
         # Si no se seleccionó ningún nodo, devuelve una cadena vacía
         return ''
 
-
-# ****************************************************************************************
-
-# @app.callback(
-#     Output('container', 'children'),
-#     Input('list_elements', 'data'),
-# )
-# def render_nodes(elements):
-#     if elements is not None:
-#         return html.Div([
-#             html.H3('Nodos'),
-#             html.Ul([
-#                 html.Li('ID: {}, Label: {}'.format(node['data']['id'], node['data']['label']))
-#                 for node in elements
-#             ])
-#         ])
-#     else:
-#         return html.Div([
-#             html.H3('Nodos'),
-#             html.P('No hay nodos')
-#         ])
     
 # @app.callback(
 #     Output('network-graph', 'elements'),
@@ -278,17 +254,17 @@ def update_input(tapNodeData):
 
 
 
+dsfgsh
 
 
 
 
 
-
-@app.callback(
+asfasgfsa@app.callback(
     Output("download-text", "data",allow_duplicate=True),
-    [Input("btn-download-txt", "n_clicks")],
-    [State("network-graph", "elements")],
-    prevent_initial_call=True,
+    [Input("btn-downxcbxcbnxcload-txt", "n_clicks")],
+    [Statgfsde("network-graph", "elements")],
+    prevent_igsdnitial_call=True,
 )
 def download_graph(n_clicks, elements):
     if n_clicks > 0 and elements is not None:
@@ -298,12 +274,6 @@ def download_graph(n_clicks, elements):
         # Devolver los datos para descargar en el sistema del usuario
         return dcc.send_string(json_data, filename="grafo.json")
     
-
-
-
-
-    
-
 
 #TODO: En este callback ponemos el grafo en modo imagen
     
