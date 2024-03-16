@@ -101,11 +101,13 @@ def register_callbacks(app):
     # Callback para guardar el archivo JSON , Dandole un nombre
     @app.callback(
         Output("download", "data"),
-        [Input("save-file-as", "n_clicks")],  # Agregado "save-file-as" como Input
-        [State("network-graph", "elements"), State("input", "value")],  # Cambiado "rename_file" a "input"
+        [Input("guardar-como", "n_clicks")],  # Agregado "save-file-as" como Input
+        [State("network-graph", "elements"),
+        State("input", "value")],  # Cambiado "rename_file" a "input"
         prevent_initial_call=True,
     )
     def func(save_as_clicks, data, filename): 
+        print(save_as_clicks, data, filename)
         if save_as_clicks > 0 and filename is not None and data is not None:  # Cambiado "n_clicks" a "save_as_clicks"
             # Serializar los datos a una cadena JSON
             json_data = json.dumps(data)
@@ -144,8 +146,8 @@ def register_callbacks(app):
                     # Para cada arista, establecer el valor correspondiente en el DataFrame al peso de la arista
                     df_binary.loc[element['data']['source'], element['data']['target']] = 1
                     df_binary.loc[element['data']['target'], element['data']['source']] = 1
-                    df_weights.loc[element['data']['source'], element['data']['target']] = element['data'].get('weight', 0)
-                    df_weights.loc[element['data']['target'], element['data']['source']] = element['data'].get('weight', 0)
+                    df_weights.loc[element['data']['source'], element['data']['target']] = int(element['data'].get('weight', 0))
+                    df_weights.loc[element['data']['target'], element['data']['source']] = int(element['data'].get('weight', 0))
 
             # Agregar una columna vacía al principio de cada DataFrame
             # df_binary.insert(0, '', '')
@@ -165,3 +167,6 @@ def register_callbacks(app):
 
             # Devolver los datos para que se descarguen en el sistema del usuario
             return dcc.send_file(file_path)
+        
+
+

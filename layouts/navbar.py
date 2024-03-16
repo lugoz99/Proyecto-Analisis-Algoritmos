@@ -2,7 +2,6 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 header = dbc.NavbarSimple(
-    className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm",
     children=[
         dbc.DropdownMenu(
             children=[
@@ -21,7 +20,14 @@ header = dbc.NavbarSimple(
         dbc.DropdownMenu(
             children=[
                 dbc.DropdownMenuItem("Archivos", header=True),
-                dbc.DropdownMenuItem(dbc.Button("Abrir", id='open-file', className="dropdown-item")),
+                dcc.Upload(
+                    id='open-file',
+                    children=html.Button('Abrir Archivo', className='btn btn-primary', style={'margin': '10px'}),
+                    style={
+                        'display': 'inline-block'
+                    }
+            ),
+                
                 dbc.DropdownMenuItem(dbc.Button("Cerrar", id='close-file', className="dropdown-item")),
                 dbc.DropdownMenuItem(html.Button("Guardar", id="btn-download-txt", className="dropdown-item")),
                 dbc.DropdownMenuItem(dcc.Download(id="download-text")),
@@ -39,13 +45,14 @@ header = dbc.NavbarSimple(
                     dbc.DropdownMenuItem("Formato txt", href="#"),
                     dbc.DropdownMenuItem(divider=True),
                     dbc.DropdownMenuItem("Exportar datos", header=True),
-                    dbc.DropdownMenuItem( html.Div(
-                        children=[
-                            dcc.Download(id="download"),
-                            html.Button("Descargar datos", id="btn", n_clicks=0),
-                        ],
+                    dbc.DropdownMenuItem(
+                        html.Div(
+                            children=[
+                                dcc.Download(id="download-excel"),
+                                html.Button("Descargar datos", id="btn", n_clicks=0, className="btn btn-primary"),
+                            ],
+                        ),
                     ),
-                    href="#"),
                     dbc.DropdownMenu(
                         label="Imagen",
                         size="md",
@@ -84,7 +91,8 @@ header = dbc.NavbarSimple(
 
     ],
     brand="Proyecto Análisis y Diseño de Algoritmos - 2024",
-    brand_href="#",
-    color="primary",
+    brand_href="/",
+    color= '#1f618d ',
+    sticky="top",
     dark=True,
 )

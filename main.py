@@ -14,7 +14,7 @@ from layouts.navbar import header
 from layouts.form_page import modal,modal_edit_node
 from utils.visualization import update_network,update_network_personalizado,load_json_file
 from helpers.form import get_form_data, get_form_node_edit
-from layouts.general_layouts import rename_file
+from layouts.general_layouts import rename_file,modal_guardar_como
 from callbacks.callbacks import register_callbacks
 from utils.config import style_node, style_edge
 from dash.exceptions import PreventUpdate
@@ -28,6 +28,7 @@ cyto.load_extra_layouts()
 app.layout = html.Div([
     modal,
     modal_edit_node,
+    modal_guardar_como,
     header,
     dcc.Upload(
         id='open-file',
@@ -254,16 +255,14 @@ def update_input(tapNodeData):
 
 
 
-dsfgsh
 
 
 
 
-
-asfasgfsa@app.callback(
+@app.callback(
     Output("download-text", "data",allow_duplicate=True),
     [Input("btn-downxcbxcbnxcload-txt", "n_clicks")],
-    [Statgfsde("network-graph", "elements")],
+    [State("network-graph", "elements")],
     prevent_igsdnitial_call=True,
 )
 def download_graph(n_clicks, elements):
@@ -296,8 +295,8 @@ def display_page(n_clicks, imageData):
 
 
 
-
-#TODO: ZONA DE MODAL DEL FORMULARIO
+#****************************************************************************************
+#TODO: ZONA DE MODALES DEL FORMULARIO
 
 @app.callback(
     Output("modal", "is_open"),
@@ -318,6 +317,20 @@ def toggle_modal(n1, n2, is_open):
     [State("modal-edit-node", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+
+
+@app.callback(
+    Output("modal-guardar-como", "is_open"),
+    [Input("save-file-as", "n_clicks"),
+    Input("guardar-como", "n_clicks")],
+    [State("modal-guardar-como", "is_open")],
+)
+def toggle_modal_guardar_como(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open

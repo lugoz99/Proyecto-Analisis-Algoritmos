@@ -59,10 +59,30 @@ rename_file = html.Div([
                         type="text", 
                         required=True,
                         placeholder="Renombrar archivo grafo.json",
-                        className="p-2 mt-2",
+                        className="p-1 mt-2",
                         style={'flex': '1', 'marginRight': '10px'}
-                    ),
-            ]
-        ) 
+                    )
+                   ]
+             ) 
         ])     
 ])
+
+
+
+
+modal_guardar_como = dbc.Modal(
+    [
+        dbc.ModalHeader("Formulario"),
+        dbc.ModalBody(
+            rename_file
+        ),
+        dbc.ModalFooter(
+                    dbc.Button(
+                        "Guardar", id="guardar-como", className="ms-auto", n_clicks=0
+                    )
+                ),
+    ],
+    id="modal-guardar-como",
+    is_open=False,
+)
+

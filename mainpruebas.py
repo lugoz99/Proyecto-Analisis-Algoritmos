@@ -13,10 +13,11 @@ from layouts.navbar import header
 from layouts.form_page import modal, modal_edit_node
 from utils.visualization import update_network, update_network_personalizado, load_json_file
 from helpers.form import get_form_data, get_form_node_edit
-from layouts.general_layouts import rename_file
+from layouts.general_layouts import rename_file, modal_guardar_como
 from callbacks.callbacks import register_callbacks
 from utils.config import style_node, style_edge
 from dash.exceptions import PreventUpdate
+from layouts.buttons import buttons_nodes,buttons_edges
 
 app = dash.Dash(__name__, prevent_initial_callbacks='initial_duplicate', suppress_callback_exceptions=True,
                 external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, "style.css"])
@@ -26,64 +27,33 @@ cyto.load_extra_layouts()
 app.layout = html.Div([
     modal,
     modal_edit_node,
+    modal_guardar_como,
     header,
-    dcc.Upload(
-        id='open-file',
-        children=html.Button('Open File'),
-        style={
-            'display': 'inline-block'
-        }
+    html.Div(
+    style={'display': 'flex', 'flexDirection': 'row', 'justifyContent': 'space-between'},
+    children=[
+        buttons_nodes,
+        buttons_edges
+        ]
     ),
-    html.Div([
-        dbc.Button(
-            children=[
-                html.I(className="bi bi-plus-circle-fill"),  # Icono de +
-                " Agregar"
-            ],
-            id='add-node-button',
-            color="primary",  # Color del botón
-            className="mr-1"  # Espacio a la derecha del botón
-        ),
-
-        dbc.Button(
-            children=[
-                html.I(className="bi bi-pencil-fill"),  # Icono de +
-                " Actualizar"
-            ],
-            id='update-button',
-            color="secondary",  # Color del botón
-            className="mr-1"  # Espacio a la derecha del botón
-        ),
-
-        dbc.Button(
-            children=[
-                html.I(className="bi bi-trash3-fill"),  # Icono de +
-                " Eliminar"
-            ],
-            id='delete-button',
-            color="danger",  # Color del botón
-            className="mr-1"  # Espacio a la derecha del botón
-        ),
-        html.Div([
-            dcc.Input(id="node-label-input", type="text", placeholder="Nodo Seleccionado",
-                      style={'marginRight': '10px'}),
-        ]),
-    ], style={'display': 'flex', 'justifyContent': 'center'}),
-
-    # Guarda JSON
-    rename_file,
+    
     dcc.Store(id='form-data-store'),
     dcc.Store(id='network-elements'),
     dcc.Store(id='form-edit-store'),
     dcc.Store(id='image-data-store'),
     dcc.Store(id="list_elements"),
-    html.Div(id='container'),
-    html.Div(id='page-content', children=cyto.Cytoscape(id='network-graph',
+    html.Div(id='page-content',className="d-flex justify-content-center align-items-center",
+              children=
+                [
+                    cyto.Cytoscape(id='network-graph',
                                                         layout={'name': 'circle'},
                                                         elements=[],
                                                         stylesheet=[style_node, style_edge],
                                                         style={'width': '100%', 'height': '800px'},
-                                                        )),
+                                                         ),
+                ]
+    ),
+
 
 ])
 
@@ -181,6 +151,20 @@ def toggle_modal(n1, n2, is_open):
     return is_open
 
 
+
+@app.callback(
+    Output("modal-guardar-como", "is_open"),
+    [Input("save-file-as", "n_clicks"),
+    Input("guardar-como", "n_clicks")],
+    [State("modal-guardar-como", "is_open")],
+)
+def toggle_modal_guardar_como(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+
 #---------------------------------------------------------------------
 @app.callback(
     Output("download-text", "data",allow_duplicate=True),
@@ -197,6 +181,34 @@ def download_graph(n_clicks, elements):
         return dcc.send_string(json_data, filename="grafo.json")
     
 
+
+
+@app.callback(
+    Output('page-content', 'children'),
+    Input('id-grafica', 'n_clicks'),
+    State('image-data-store', 'data'),
+    prevent_initial_call=True
+)
+def display_page(n_clicks, imageData):
+    if n_clicks is not None and imageData is not None:
+        card_content = [
+            dbc.CardBody(
+                children=[
+                    html.H4("Modo Imagen", className="card-title"),
+                    html.Div(
+                        dbc.CardImg(src=imageData, 
+                                    style={'width': '100%', 
+                                           'height': '100%', 
+                                           'display': 'block', 
+                                           'margin': 'auto',
+                                           'object-fit': 'contain'}),
+                        style={'display': 'flex', 'justify-content': 'center', 'align-items': 'center'}
+                    ),
+                ]
+            ),
+        ]
+        return dbc.Card(card_content, className="w-100 h-100")
+  
 
 if __name__ == '__main__':
     app.run_server(debug=True)

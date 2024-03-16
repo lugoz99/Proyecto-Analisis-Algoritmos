@@ -19,3 +19,9 @@ def get_form_node_edit(form_data):
             form_data.get('size')
         )
     return None, None, None
+
+
+def obter_input_guardar_como(input_data):
+    if input_data:
+        return input_data
+    return None
