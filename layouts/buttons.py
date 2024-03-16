@@ -1,6 +1,6 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-
+import  dash_daq as daq
 buttons_nodes = dbc.Card(
     [
         dbc.CardHeader("Edición de Nodos"),
@@ -40,6 +40,13 @@ buttons_nodes = dbc.Card(
                 html.Div([
                     dcc.Input(id="node-label-input", type="text", placeholder="Nodo Seleccionado",
                               style={'marginRight': '10px'}),
+                    dcc.Input(id="node-label-valor", type="text", placeholder="Nodo Seleccionado",
+                              style={'marginRight': '10px'}),
+                    daq.ColorPicker(
+                        id='color-picker',
+                        label='Color Picker',
+        value=dict(hex='#119DFF')
+    ),
                 ]),
             ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center'}
         ),
