@@ -3,301 +3,286 @@
 import json
 import random
 import string
-import time
 import dash
 from dash import html, dcc
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
-#Importaciones de carpetas y funciones
+
+# Importaciones de carpetas y funciones
 from layouts.navbar import header
-from layouts.form_page import modal,modal_edit_node
-from utils.visualization import update_network,update_network_personalizado,load_json_file
+from layouts.form_page import modal, modal_edit_node
+from utils.visualization import (
+    update_network,
+    update_network_personalizado,
+    load_json_file,
+)
 from helpers.form import get_form_data, get_form_node_edit
-from layouts.general_layouts import rename_file,modal_guardar_como
+from layouts.general_layouts import rename_file, modal_guardar_como
 from callbacks.callbacks import register_callbacks
-from utils.config import style_node, style_edge
+from utils.config import config_stylesheet
 from dash.exceptions import PreventUpdate
+from layouts.buttons import buttons_nodes, buttons_edges, contenedor_info
 
-
-app = dash.Dash(__name__,prevent_initial_callbacks='initial_duplicate', suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, "style.css"])
+app = dash.Dash(
+    __name__,
+    prevent_initial_callbacks="initial_duplicate",
+    suppress_callback_exceptions=True,
+    external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, "style.css"],
+)
 register_callbacks(app)
 cyto.load_extra_layouts()
 
+app.layout = html.Div(
+    [
+        modal,
+        modal_edit_node,
+        modal_guardar_como,
+        header,
+        html.Div(
+            style={
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+            },
+            children=[buttons_nodes, contenedor_info, buttons_edges],
+        ),
+        dcc.Store(id="form-data-store"),
+        dcc.Store(id="network-elements"),
+        dcc.Store(id="form-edit-store"),
+        dcc.Store(id="image-data-store"),
+        dcc.Store(id="list_elements"),
+        html.Div(
+            id="page-content",
+            className="d-flex justify-content-center align-items-center",
+            children=[
+                cyto.Cytoscape(
+                    id="network-graph",
+                    layout={"name": "circle"},
+                    elements=[],
+                    stylesheet=config_stylesheet,
+                    style={"width": "100%", "height": "800px"},
+                ),
+            ],
+        ),
+    ]
+)
 
-app.layout = html.Div([
-    modal,
-    modal_edit_node,
-    modal_guardar_como,
-    header,
-    dcc.Upload(
-        id='open-file',
-        children=html.Button('Open File'),
-        style={
-            'display': 'inline-block'
+
+@app.callback(
+    [Output("network-graph", "elements"), Output("network-graph", "stylesheet")],
+    [
+        Input("close", "n_clicks"),
+        Input("form-data-store", "data"),
+        Input("open-file", "contents"),
+        Input("open-file", "filename"),
+        Input("add-node-button", "n_clicks"),
+        Input("delete-button", "n_clicks"),
+        Input("update-button", "n_clicks"),
+        Input("add-edge-button", "n_clicks"),
+        Input("delete-edge-button", "n_clicks"),
+        Input("update-edge-button", "n_clicks"),
+    ],
+    [
+        State("edge-label-input", "value"),
+        State("line-style-dropdown", "value"),
+        State("arrow-checklist", "value"),
+        State("color-picker", "value"),
+        
+        State("node-label-input", "value"),
+        State("node-value-input", "value"),
+        State("color-picker-node", "value"),
+        
+        State("network-graph", "elements"),
+        State("network-graph", "selectedNodeData"),
+        State("network-graph", "selectedEdgeData"),
+        State("network-graph", "stylesheet"),
+    ],
+)
+def update_graph(
+    accept_clicks,
+    form_data,
+    file_name,
+    file_contents,
+    # Argumentos para nodos
+    add_clicks,
+    delete_clicks,
+    update_clicks,
+    # Argumentos para edges
+    add_edge_click,
+    delete_e_clicks,
+    update_e_clicks,
+    edge_label,
+    line_style,
+    show_arrow,
+    color_picker_value,
+    node_label,
+    node_value,
+    color_picker_node,
+    #-----------------------
+    elements,
+    selected_node,
+    selected_edge,
+    stylesheet,
+):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if button_id == "close":
+        # Generar grafo personalizado y actualizar elementos
+        n_nodes, is_complete, is_connected, is_weighted, is_directed = get_form_data(
+            form_data
+        )
+        if n_nodes is not None:
+            elements = update_network_personalizado(
+                n_nodes, is_weighted, is_directed, is_connected, is_complete
+            )
+            #TODO : AQUI FALTA MODIFCAR LOS ESTILOS
+            for style in config_stylesheet:
+                if style["selector"] == "edge":
+                    if is_directed:
+                        style["style"]["target-arrow-shape"] = "triangle"
+                    else:
+                        if "target-arrow-shape" in style["style"]:
+                            del style["style"]["target-arrow-shape"]
+
+    elif button_id == "update-button":
+        selected_node = selected_node[0]
+        print("Selected node:", selected_node)
+        elements_dict = {element["data"]["id"]: element for element in elements}
+        print("Elements dict:", elements_dict)
+        if selected_node["id"] in elements_dict:
+            elements_dict[selected_node["id"]]["data"]["label"] = node_label
+            elements_dict[selected_node["id"]]["data"]["value"] = node_value
+            print("Updated node:", elements_dict[selected_node["id"]])
+            
+            node_style = {
+                "selector": f'node[id = "{selected_node["id"]}"]',
+                "style": {
+                    "background-color": color_picker_node["hex"],
+                },
+            }
+            # Agregar el nuevo selector a la hoja de estilos
+            stylesheet.append(node_style)
+
+    elif (
+        button_id == "open-file" and file_contents is not None and file_name is not None
+    ):
+        # Aquí puedes procesar y visualizar los datos del archivo
+        # Por ejemplo, si estás cargando un archivo JSON:
+        v = load_json_file(file_name, file_contents)
+        if v is not None:
+            elements = v
+
+    elif button_id == "add-node-button" and add_clicks is not None:
+        # Añadir un nuevo nodo
+        if elements is None:
+            elements = []
+        new_node = {
+            "data": {"id": generate_id(), "label": "Node {}".format(add_clicks),"value":str(0)},
+            "position": {
+                "x": random.randint(0, 500),
+                "y": random.randint(0, 500),
+            },  # Agrega coordenadas aleatorias al nodo
         }
-    ),
-    html.Div([
-    dbc.Button(
-        children=[
-            html.I(className="bi bi-plus-circle-fill"),  # Icono de +
-            " Agregar"
-        ],
-        id='add-node-button',
-        color="primary",  # Color del botón
-        className="mr-1"  # Espacio a la derecha del botón
-    ),
+        elements.append(new_node)
 
-    dbc.Button(
-        children=[
-            html.I(className="bi bi-pencil-fill"),  # Icono de +
-            " Actualizar"
-        ],
-        id='update-button',
-        color="secondary",  # Color del botón
-        className="mr-1"  # Espacio a la derecha del botón
-    ),
+    elif (
+        button_id == "delete-button"
+        and delete_clicks is not None
+        and selected_node is not None
+    ):
+        # Eliminar nodo
+        if elements is not None and selected_node is not None:
+            selected_node = selected_node[
+                0
+            ]  # Obtener el primer elemento de selected_node
+            print("Deleting node:", selected_node["id"])
+            # Remover el nodo seleccionado de los elementos
+            elements = [
+                element
+                for element in elements
+                if element["data"]["id"] != selected_node["id"]
+            ]
+    # *******CREAR,EDITAR Y ELIMINAR ARISTAS**********************************************
 
-    dbc.Button(
-        children=[
-            html.I(className="bi bi-trash3-fill"),  # Icono de +
-            " Eliminar"
-        ],
-        id='delete-button',
-        color="danger",  # Color del botón
-        className="mr-1"  # Espacio a la derecha del botón
-    ),
-    html.Div([
-    dcc.Input(id="node-label-input", type="text", placeholder="Nodo Seleccionado", style={'marginRight':'10px'}),
-]),
-], style={'display': 'flex', 'justifyContent': 'center'}),
+    elif (
+        button_id == "add-edge-button"
+        and add_edge_click is not None
+        and selected_node is not None
+    ):
+        # Añadir una nueva arista
+        edge_id = generate_id()
+        new_edge = {
+            "data": {
+                "id": edge_id,
+                "source": selected_node[0]["id"],
+                "target": selected_node[-1]["id"],
+                "weight": 0,
+            }
+        }
+        elements.append(new_edge)
 
-    #Guarda JSON
-    rename_file,
-    # Formulario
-    dcc.Store(id='form-data-store'),
+    elif (
+        button_id == "delete-edge-button"
+        and delete_e_clicks is not None
+        and selected_node is not None
+    ):
+        # Eliminar arista
+        print("Deleting edge:", selected_edge)
+        selected_edge_id = selected_edge[0][
+            "id"
+        ]  # Obtener el id de la arista seleccionada
+        elements = [
+            element for element in elements if element["data"]["id"] != selected_edge_id
+        ]
 
-    # Guardar json y sus elementos 
-    dcc.Store(id='network-elements'),
-    dcc.Store(id='form-edit-store'),
-    dcc.Store(id='image-data-store'),
-    # Agregar nuevos elementos
-    dcc.Store(id="list_elements"), 
+    elif (
+        button_id == "update-edge-button"
+        and update_e_clicks is not None
+        and selected_edge is not None
+    ):
+        print("Editing edge:", selected_edge)
+        print("weight", edge_label)
+        print("line style", line_style)
+        print("arrow", show_arrow)
+        print("color", color_picker_value)
+        edge_id = selected_edge[0]["id"]  # Obtener el id de la arista seleccionada
+        color_hex = color_picker_value["hex"]
+        if selected_edge is not None:
+            # Crear un diccionario con los elementos para buscar de manera eficiente
+            elements_dict = {element["data"]["id"]: element for element in elements}
+            # Ahora puedes buscar y modificar el peso de una arista de manera eficiente
 
-    html.Div(id='container'),
-    html.Div(id='page-content',children=cyto.Cytoscape(id='network-graph',
-                                                        layout={'name': 'circle'},
-                                                        elements=[],
-                                                        stylesheet=[style_node, style_edge],
-                                                        style={'width': '100%', 'height': '800px'},
-                                                       )),
+            if edge_id in elements_dict and "source" in elements_dict[edge_id]["data"]:
+                elements_dict[edge_id]["data"]["weight"] = edge_label
 
-])
+            edge_style = {
+                "selector": f'edge[id = "{edge_id}"]',
+                "style": {
+                    "line-color": color_hex,
+                    "line-style": line_style,
+                    "target-arrow-shape": (
+                        "triangle" if "show-arrow" in show_arrow else "none"
+                    ),
+                },
+            }
+            # Agregar el nuevo selector a la hoja de estilos
+            stylesheet.append(edge_style)
+
+    return elements, stylesheet
+
+    return elements, stylesheet
 
 
 def generate_id(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choice(chars) for _ in range(size))
 
 
-def add_node(elements):
-
-
-    # If elements is not None, update the global variable
-    if elements is None:
-        elements = []
-
-    # Create a new node
-    new_node = {
-        'data': {'id': generate_id(), 'label': 'New node'},
-        'position': {'x': random.randint(0, 500), 'y': random.randint(0, 500)}  # Agrega coordenadas aleatorias al nodo
-    }
-
-    # Add the new node to the existing elements
-    elements.append(new_node)
-
-
-    return elements
-
-
-
-@app.callback(
-    Output('network-graph', 'elements',allow_duplicate=True),
-    [Input('close', 'n_clicks')],
-    [Input('form-data-store', 'data')],
-    Input('open-file', 'contents'),
-    Input('open-file', 'filename'),
-    Input('add-node-button','n_clicks'),
-    Input('form-edit-store','data'),
-)
-def update_graph(accept_clicks, form_data, file_contents, file_name, add_node_clicks, form_edit_data):
-    ctx = dash.callback_context
-    elements = []
-    if not ctx.triggered:
-        return dash.no_update
-    else:
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if button_id == 'close':
-        # Generar grafo personalizado y actualizar elementos
-        n_nodes, is_complete, is_connected, is_weighted, is_directed = get_form_data(form_data)
-        if n_nodes is not None:
-            elements = update_network_personalizado(n_nodes, is_weighted, is_directed, is_connected, is_complete)
-        else:
-            elements = []
-    if button_id == 'update-button':
-        # Actualizar elementos del grafo
-        label, color, size = get_form_node_edit(form_edit_data)
-        print("Entre en actualizar")
-        print(label, color, size)
-    
-    if button_id == 'add-node-button':
-        # Agregar un nodo al grafo
-        elements = add_node(elements)
-
-    
-
-    elif button_id == 'open-file' and file_contents is not None and file_name is not None:
-        # Aquí puedes procesar y visualizar los datos del archivo
-        # Por ejemplo, si estás cargando un archivo JSON:
-         v = load_json_file(file_name,file_contents)
-         if v is not None:
-             elements = v
-
-
-    return elements
-
-
-
-
-
-
-
-# Callback for adding nodes
-    
-# @app.callback(
-#     Output('list_elements', 'data'),
-#     [Input('add-node-button', 'n_clicks')],
-#     [State('list_elements', 'data')],
-# )
-
-
-
-@app.callback(
-    Output('list_elements', 'data',allow_duplicate=True),
-    [Input('delete-button', 'n_clicks')],
-    [State('list_elements', 'data'),
-     State('network-graph', 'selectedNodeData')]
-)
-def delete_node(n_clicks, elements, selected_node):
-    if n_clicks is None:
-        # Prevents the callback from being triggered on app load
-        raise PreventUpdate
-
-    if elements is not None and selected_node is not None:
-        selected_node = selected_node[0]  # Accede al primer elemento de selected_node
-        print('Deleting node:', selected_node['id'])
-        # Remove the selected node from the elements
-        elements = [element for element in elements if element['data']['id'] != selected_node['id']]
-    return elements 
-
-
-@app.callback(
-    Output('node-label-input', 'value'),
-    Input('network-graph', 'tapNodeData'),
-)
-def update_input(tapNodeData):
-    if tapNodeData is not None:
-        # Si se seleccionó un nodo, devuelve su etiqueta
-        return tapNodeData['label']
-    else:
-        # Si no se seleccionó ningún nodo, devuelve una cadena vacía
-        return ''
-
-    
-# @app.callback(
-#     Output('network-graph', 'elements'),
-#     Input('list_elements', 'data'),
-# )
-# def update_graph_cytos(elements):
-#     if elements is not None:
-#         # Return the elements directly to the Cytoscape component
-#         return elements
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@app.callback(
-    Output("download-text", "data",allow_duplicate=True),
-    [Input("btn-downxcbxcbnxcload-txt", "n_clicks")],
-    [State("network-graph", "elements")],
-    prevent_igsdnitial_call=True,
-)
-def download_graph(n_clicks, elements):
-    if n_clicks > 0 and elements is not None:
-        # Convertir los elementos del grafo a una cadena JSON
-        json_data = json.dumps(elements)
-
-        # Devolver los datos para descargar en el sistema del usuario
-        return dcc.send_string(json_data, filename="grafo.json")
-    
-
-#TODO: En este callback ponemos el grafo en modo imagen
-    
-@app.callback(
-    Output('page-content', 'children'),
-    Input('id-grafica', 'n_clicks'),
-    State('image-data-store', 'data'),
-    prevent_initial_call=True
-)
-def display_page(n_clicks, imageData):
-    if n_clicks is not None and imageData is not None:
-        img = html.Img(src=imageData)
-        return html.Div(img)
-    else:
-        return html.Div([
-            html.H1("Grafica"),
-        ])
-
-
-
-
-
-#****************************************************************************************
-#TODO: ZONA DE MODALES DEL FORMULARIO
-
+# ZONA DE MODAL DEL FORMULARIO
 @app.callback(
     Output("modal", "is_open"),
     [Input("generate-button", "n_clicks"), Input("close", "n_clicks")],
@@ -310,24 +295,11 @@ def toggle_modal(n1, n2, is_open):
 
 
 
-@app.callback(
-    Output("modal-edit-node", "is_open"),
-    [Input("update-button", "n_clicks"),
-    Input("close-update", "n_clicks")],
-    [State("modal-edit-node", "is_open")],
-)
-def toggle_modal(n1, n2, is_open):
-    if n1 or n2:
-        return not is_open
-    return is_open
-
-
 
 
 @app.callback(
     Output("modal-guardar-como", "is_open"),
-    [Input("save-file-as", "n_clicks"),
-    Input("guardar-como", "n_clicks")],
+    [Input("save-file-as", "n_clicks"), Input("guardar-como", "n_clicks")],
     [State("modal-guardar-como", "is_open")],
 )
 def toggle_modal_guardar_como(n1, n2, is_open):
@@ -336,30 +308,58 @@ def toggle_modal_guardar_como(n1, n2, is_open):
     return is_open
 
 
+# ---------------------------------------------------------------------
+@app.callback(
+    Output("download-text", "data", allow_duplicate=True),
+    [Input("btn-download-txt", "n_clicks")],
+    [State("network-graph", "elements")],
+    prevent_initial_call=True,
+)
+def download_graph(n_clicks, elements):
+    if n_clicks > 0 and elements is not None:
+        # Convertir los elementos del grafo a una cadena JSON
+        json_data = json.dumps(elements)
+
+        # Devolver los datos para descargar en el sistema del usuario
+        return dcc.send_string(json_data, filename="grafo.json")
 
 
+@app.callback(
+    Output("page-content", "children"),
+    Input("id-grafica", "n_clicks"),
+    State("image-data-store", "data"),
+    prevent_initial_call=True,
+)
+def display_page(n_clicks, imageData):
+    if n_clicks is not None and imageData is not None:
+        card_content = [
+            dbc.CardBody(
+                children=[
+                    html.H4("Modo Imagen", className="card-title"),
+                    html.Div(
+                        dbc.CardImg(
+                            src=imageData,
+                            style={
+                                "width": "100%",
+                                "height": "100%",
+                                "display": "block",
+                                "margin": "auto",
+                                "object-fit": "contain",
+                            },
+                        ),
+                        style={
+                            "display": "flex",
+                            "justify-content": "center",
+                            "align-items": "center",
+                        },
+                    ),
+                ]
+            ),
+        ]
+        return dbc.Card(card_content, className="w-100 h-100")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run_server(debug=True)
 
+# Path: layouts/buttons.py

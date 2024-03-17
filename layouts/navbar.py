@@ -6,7 +6,7 @@ header = dbc.NavbarSimple(
         dbc.DropdownMenu(
             children=[
                 dbc.DropdownMenuItem("Grafo", header=True),
-                dbc.Button("Personalizado", 
+                dbc.Button("Aleatorio", 
                            id="generate-button",
                            className="dropdown-item ",
                            n_clicks=0,
@@ -49,7 +49,7 @@ header = dbc.NavbarSimple(
                         html.Div(
                             children=[
                                 dcc.Download(id="download-excel"),
-                                html.Button("Descargar datos", id="btn", n_clicks=0, className="btn btn-primary"),
+                                html.Button("En Excel", id="btn", n_clicks=0, className="btn btn-primary"),
                             ],
                         ),
                     ),

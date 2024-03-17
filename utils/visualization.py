@@ -8,17 +8,14 @@ import json
 
 from dash.exceptions import PreventUpdate
 
-from utils.config import style_node, style_edge
 
 def create_graph(num_nodes, is_weighted, is_directed, is_connected, is_complete):
     # Crear un grafo vacío
     if not is_directed:
         G = nx.Graph()
-        edge_arrow_shape = None  # No se mostrarán flechas en las aristas
     else:
         G = nx.DiGraph()
-        edge_arrow_shape = 'triangle' 
-        style_edge['style']['target-arrow-shape'] = edge_arrow_shape
+        
 
     # Añadir nodos
     G.add_nodes_from(range(num_nodes))

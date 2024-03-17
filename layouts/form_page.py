@@ -48,7 +48,7 @@ modal = dbc.Modal(
         ),
         dbc.ModalFooter(
                     dbc.Button(
-                        "Close", id="close", className="ms-auto", n_clicks=0
+                        "Crear", id="close", className="ms-auto", n_clicks=0
                     )
                 ),
     ],

@@ -4,3 +4,4 @@ dash-cytoscape==0.2.0
 pandas
 dash-bootstrap-components
 openpyxl
+dash_daq
