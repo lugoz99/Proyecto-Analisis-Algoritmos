@@ -16,6 +16,20 @@ header = dbc.NavbarSimple(
             in_navbar=True,
             label="Generar",
         ),
+        
+         dbc.DropdownMenu(
+            children=[
+                dbc.DropdownMenuItem("Grafo", header=True),
+                dbc.Button("Proceso 1", 
+                           id="generate-button-procees-1",
+                           className="dropdown-item ",
+                           n_clicks=0,
+                           ),
+            ],
+            nav=True,
+            in_navbar=True,
+            label="Procesos",
+        ),
 
         dbc.DropdownMenu(
             children=[

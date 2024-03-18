@@ -47,10 +47,6 @@ app.layout = html.Div(
                 "display": "flex",
                 "flexDirection": "row",
                 "justifyContent": "space-between",
-                "position": "sticky",  # Añade esta línea
-                "top": "0",  # Añade esta línea si quieres que el elemento se mantenga en la parte inferior de la pantalla
-                "width": "100%",
-                "zIndex": "1000",  # Añade esta línea
             },
             children=[buttons_nodes, contenedor_info, buttons_edges],
         ),
