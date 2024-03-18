@@ -127,13 +127,14 @@ def register_callbacks(app):
 # ***Callback para descargar la matriz de adyacencia en Excel***
             
     @app.callback(
-        Output("download", "data",allow_duplicate=True),
+        Output("download-excel", "data",allow_duplicate=True),
         [Input("btn", "n_clicks"), Input("network-graph", "elements")],
         prevent_initial_call=True,
     )
 
     def func(n_clicks,elements):
         if n_clicks > 0:
+            print(elements)
             print("tamaño de la lista",len(elements))
             # Crear dos DataFrames vacíos con los nodos como índices y columnas
             nodes = [str(i) for i in range(len(elements))]
@@ -144,10 +145,10 @@ def register_callbacks(app):
             for element in elements:
                 if 'source' in element['data'] and 'target' in element['data']:
                     # Para cada arista, establecer el valor correspondiente en el DataFrame al peso de la arista
-                    df_binary.loc[element['data']['source'], element['data']['target']] = 1
-                    df_binary.loc[element['data']['target'], element['data']['source']] = 1
-                    df_weights.loc[element['data']['source'], element['data']['target']] = int(element['data'].get('weight', 0))
-                    df_weights.loc[element['data']['target'], element['data']['source']] = int(element['data'].get('weight', 0))
+                    df_binary.loc[element['data']['source'], int(element['data']['target'])] = 1
+                    df_binary.loc[element['data']['target'], int(element['data']['source'])] = 1
+                    df_weights.loc[element['data']['source'],int( element['data']['target'])] = element['data'].get('weight', 0)
+                    df_weights.loc[element['data']['target'],int( element['data']['source'])] = element['data'].get('weight', 0)
 
             # Agregar una columna vacía al principio de cada DataFrame
             # df_binary.insert(0, '', '')

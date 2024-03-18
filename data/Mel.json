@@ -1,1 +1,60 @@
-[{"data": {"id": "0", "label": "0"}}, {"data": {"id": "1", "label": "1"}}, {"data": {"id": "2", "label": "2"}}, {"data": {"id": "3", "label": "3"}}, {"data": {"source": "0", "target": "1", "weight": "58", "label": "58", "id": "dd9d1f00-6e88-46f0-8792-77c00d04d1ef"}}, {"data": {"source": "0", "target": "2", "weight": "7", "label": "7", "id": "ad42bb1f-5b3d-40ce-b7a1-d947bfddbbaf"}}, {"data": {"source": "0", "target": "3", "weight": "9", "label": "9", "id": "b367f5e3-51a7-4ce0-9592-066c0ef377fe"}}, {"data": {"source": "1", "target": "2", "weight": "1", "label": "1", "id": "a6163d08-0acc-41fd-ad41-70b3c3049141"}}, {"data": {"source": "1", "target": "3", "weight": "52", "label": "52", "id": "f91e0816-ec18-4f0d-8f6f-e66239b1365f"}}, {"data": {"source": "2", "target": "3", "weight": "83", "label": "83", "id": "2ae862f3-5c0a-4188-b1b8-502e5106405f"}}]
+[
+  { "data": { "id": "0", "label": "0" } },
+  { "data": { "id": "1", "label": "1" } },
+  { "data": { "id": "2", "label": "2" } },
+  { "data": { "id": "3", "label": "3" } },
+  {
+    "data": {
+      "source": "0",
+      "target": "1",
+      "weight": "58",
+      "label": "58",
+      "id": "dd9d1f00-6e88-46f0-8792-77c00d04d1ef"
+    }
+  },
+  {
+    "data": {
+      "source": "0",
+      "target": "2",
+      "weight": "7",
+      "label": "7",
+      "id": "ad42bb1f-5b3d-40ce-b7a1-d947bfddbbaf"
+    }
+  },
+  {
+    "data": {
+      "source": "0",
+      "target": "3",
+      "weight": "9",
+      "label": "9",
+      "id": "b367f5e3-51a7-4ce0-9592-066c0ef377fe"
+    }
+  },
+  {
+    "data": {
+      "source": "1",
+      "target": "2",
+      "weight": "1",
+      "label": "1",
+      "id": "a6163d08-0acc-41fd-ad41-70b3c3049141"
+    }
+  },
+  {
+    "data": {
+      "source": "1",
+      "target": "3",
+      "weight": "52",
+      "label": "52",
+      "id": "f91e0816-ec18-4f0d-8f6f-e66239b1365f"
+    }
+  },
+  {
+    "data": {
+      "source": "2",
+      "target": "3",
+      "weight": "83",
+      "label": "83",
+      "id": "2ae862f3-5c0a-4188-b1b8-502e5106405f"
+    }
+  }
+]

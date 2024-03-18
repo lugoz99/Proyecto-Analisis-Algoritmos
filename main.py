@@ -8,6 +8,9 @@ from dash import html, dcc
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_cytoscape as cyto
+import numpy as np
+import pandas as pd
+from dash import dash_table
 
 # Importaciones de carpetas y funciones
 from layouts.navbar import header
@@ -44,6 +47,10 @@ app.layout = html.Div(
                 "display": "flex",
                 "flexDirection": "row",
                 "justifyContent": "space-between",
+                "position": "sticky",  # Añade esta línea
+                "top": "0",  # Añade esta línea si quieres que el elemento se mantenga en la parte inferior de la pantalla
+                "width": "100%",
+                "zIndex": "1000",  # Añade esta línea
             },
             children=[buttons_nodes, contenedor_info, buttons_edges],
         ),
@@ -55,13 +62,16 @@ app.layout = html.Div(
         html.Div(
             id="page-content",
             className="d-flex justify-content-center align-items-center",
+            style={"marginTop": "50px","overflow": "auto",  # Añade esta línea
+                    "height": "800px"},
             children=[
                 cyto.Cytoscape(
                     id="network-graph",
-                    layout={"name": "circle"},
+                    layout={"name": "random"},
                     elements=[],
                     stylesheet=config_stylesheet,
                     style={"width": "100%", "height": "800px"},
+                    autoRefreshLayout=True,
                 ),
             ],
         ),
@@ -70,7 +80,8 @@ app.layout = html.Div(
 
 
 @app.callback(
-    [Output("network-graph", "elements"), Output("network-graph", "stylesheet")],
+    [Output("network-graph", "elements"),
+     Output("network-graph", "stylesheet")],
     [
         Input("close", "n_clicks"),
         Input("form-data-store", "data"),
@@ -275,7 +286,6 @@ def update_graph(
 
     return elements, stylesheet
 
-    return elements, stylesheet
 
 
 def generate_id(size=6, chars=string.ascii_uppercase + string.digits):
@@ -325,7 +335,7 @@ def download_graph(n_clicks, elements):
 
 
 @app.callback(
-    Output("page-content", "children"),
+    Output("info-grafo", "children"),
     Input("id-grafica", "n_clicks"),
     State("image-data-store", "data"),
     prevent_initial_call=True,
@@ -357,6 +367,76 @@ def display_page(n_clicks, imageData):
             ),
         ]
         return dbc.Card(card_content, className="w-100 h-100")
+
+
+
+
+
+
+
+
+
+
+@app.callback(
+    Output("info-grafo", "children",allow_duplicate=True),
+    [Input("id-table", "n_clicks")],
+    [State("network-graph", "elements")],
+    prevent_initial_call=True,
+)
+def tabla(n_clicks, elements):
+    if n_clicks is not None and elements is not None:
+        conjunto_arista = [item["data"] for item in elements if 'source' in item['data'] and 'target' in item['data']]
+        df = pd.DataFrame(conjunto_arista)
+        nodes = pd.concat([df["source"], df["target"]]).unique()
+
+        # Crear un mapeo de los nodos a números enteros
+        node_mapping = {node: i for i, node in enumerate(nodes)}
+
+        # Aplicar el mapeo a los datos de las aristas
+        df["source"] = df["source"].map(node_mapping)
+        df["target"] = df["target"].map(node_mapping)
+
+        # Crear la matriz de adyacencia con los nodos mapeados
+        adjacency_matrix = pd.DataFrame(np.zeros((len(nodes), len(nodes)), dtype=int), index=range(len(nodes)), columns=range(len(nodes)))
+
+        for _, edge in df.iterrows():
+            adjacency_matrix.loc[edge['source'], edge['target']] = 1
+            adjacency_matrix.loc[edge['target'], edge['source']] = 1
+
+        # Crear la tabla
+        table = dash_table.DataTable(
+                data=adjacency_matrix.reset_index().rename(columns={"index": ""}).to_dict('records'),
+                columns=[{"name": str(i), "id": str(i)} if i != "" else {"name": i, "id": i} for i in adjacency_matrix.columns],
+                style_table={'height': '300px', 'overflowY': 'auto'},
+                style_cell={
+                    'height': 'auto',
+                    # all three widths are needed
+                    'minWidth': '50px', 'width': '50px', 'maxWidth': '50px',
+                    'whiteSpace': 'normal',
+                    'color':'black'
+            }
+        )
+        title = html.H3('Matriz de Representación')
+
+        if table is not None:
+             return html.Div([title, table])
+
+
+@app.callback(
+    Output("info-grafo", "children",allow_duplicate=True),
+[    Input("id-grafica", "n_clicks"),
+     Input("open-file", "contents"),
+     Input("open-file", "filename"),
+     Input("close", "n_clicks"),
+     Input("add-node-button", "n_clicks"),
+     Input("add-edge-button", "n_clicks"),
+     ],
+    prevent_initial_call=True,
+)
+def clear_info_grafo(n1, n2, n3,n4,n7,n6):  # Añade más argumentos aquí si agregas más acciones
+    # Este callback se activará si cualquiera de las acciones se realiza
+    return None
+
 
 
 if __name__ == "__main__":
