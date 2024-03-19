@@ -69,7 +69,6 @@ def register_callbacks(app):
         if not n_clicks:
             return no_update
         
-        print(form_data)
         form_data = {
             'label': label,
             'value': valor,
@@ -107,7 +106,6 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def func(save_as_clicks, data, filename): 
-        print(save_as_clicks, data, filename)
         if save_as_clicks > 0 and filename is not None and data is not None:  # Cambiado "n_clicks" a "save_as_clicks"
             # Serializar los datos a una cadena JSON
             json_data = json.dumps(data)
@@ -134,8 +132,6 @@ def register_callbacks(app):
 
     def func(n_clicks,elements):
         if n_clicks > 0:
-            print(elements)
-            print("tamaño de la lista",len(elements))
             # Crear dos DataFrames vacíos con los nodos como índices y columnas
             nodes = [str(i) for i in range(len(elements))]
             df_binary = pd.DataFrame(0, index=nodes, columns=nodes)

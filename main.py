@@ -148,23 +148,19 @@ def update_graph(
                 n_nodes, is_weighted, is_directed, is_connected, is_complete
             )
             #TODO : AQUI FALTA MODIFCAR LOS ESTILOS
-            for style in config_stylesheet:
-                if style["selector"] == "edge":
-                    if is_directed:
-                        style["style"]["target-arrow-shape"] = "triangle"
-                    else:
-                        if "target-arrow-shape" in style["style"]:
-                            del style["style"]["target-arrow-shape"]
+            if stylesheet is not None:
+                if is_directed:
+                    for style in stylesheet:
+                        if style["selector"] == "edge":
+                            style["style"]["target-arrow-shape"] = "triangle"
+            
 
     elif button_id == "update-button":
         selected_node = selected_node[0]
-        print("Selected node:", selected_node)
         elements_dict = {element["data"]["id"]: element for element in elements}
-        print("Elements dict:", elements_dict)
         if selected_node["id"] in elements_dict:
             elements_dict[selected_node["id"]]["data"]["label"] = node_label
             elements_dict[selected_node["id"]]["data"]["value"] = node_value
-            print("Updated node:", elements_dict[selected_node["id"]])
             
             node_style = {
                 "selector": f'node[id = "{selected_node["id"]}"]',
@@ -207,7 +203,6 @@ def update_graph(
             selected_node = selected_node[
                 0
             ]  # Obtener el primer elemento de selected_node
-            print("Deleting node:", selected_node["id"])
             # Remover el nodo seleccionado de los elementos
             elements = [
                 element
@@ -239,7 +234,6 @@ def update_graph(
         and selected_node is not None
     ):
         # Eliminar arista
-        print("Deleting edge:", selected_edge)
         selected_edge_id = selected_edge[0][
             "id"
         ]  # Obtener el id de la arista seleccionada
@@ -252,11 +246,6 @@ def update_graph(
         and update_e_clicks is not None
         and selected_edge is not None
     ):
-        print("Editing edge:", selected_edge)
-        print("weight", edge_label)
-        print("line style", line_style)
-        print("arrow", show_arrow)
-        print("color", color_picker_value)
         edge_id = selected_edge[0]["id"]  # Obtener el id de la arista seleccionada
         color_hex = color_picker_value["hex"]
         if selected_edge is not None:
